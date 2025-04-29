@@ -21,8 +21,7 @@
     color: white;
   }
   
-  /* Main content styling */
-  main {
+    main {
     flex: 1;
     display: flex;
     justify-content: center;

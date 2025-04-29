@@ -2,9 +2,14 @@
 session_start();
 include("config.php");
 
+// Initialize variables
 $genreFilter = isset($_GET['genre']) ? $_GET['genre'] : 'all';
 $sortOrder = isset($_GET['sort']) ? $_GET['sort'] : 'a-z';
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$moviesPerPage = 9; // Number of movies per page
+$offset = ($page - 1) * $moviesPerPage;
 
+// Fetch genres from the database
 $genresQuery = "SELECT DISTINCT genre FROM movies";
 $genresResult = mysqli_query($conn, $genresQuery);
 $genres = [];
@@ -12,6 +17,7 @@ while ($row = mysqli_fetch_assoc($genresResult)) {
     $genres[] = $row['genre'];
 }
 
+// Build the query for movies
 $query = "SELECT * FROM movies";
 if ($genreFilter !== 'all') {
     $query .= " WHERE genre = '" . mysqli_real_escape_string($conn, $genreFilter) . "'";
@@ -21,16 +27,27 @@ if ($sortOrder === 'a-z') {
 } elseif ($sortOrder === 'z-a') {
     $query .= " ORDER BY title DESC";
 }
+$query .= " LIMIT $moviesPerPage OFFSET $offset";
 
 $result = mysqli_query($conn, $query);
 if (!$result) {
     die("Query failed: " . mysqli_error($conn));
 }
 
+// Fetch movies into an array
 $movies = [];
 while ($row = mysqli_fetch_assoc($result)) {
     $movies[] = $row;
 }
+
+// Get the total number of movies for pagination
+$countQuery = "SELECT COUNT(*) as total FROM movies";
+if ($genreFilter !== 'all') {
+    $countQuery .= " WHERE genre = '" . mysqli_real_escape_string($conn, $genreFilter) . "'";
+}
+$countResult = mysqli_query($conn, $countQuery);
+$totalMovies = mysqli_fetch_assoc($countResult)['total'];
+$totalPages = ceil($totalMovies / $moviesPerPage);
 ?>
 
 <!DOCTYPE html>
@@ -73,7 +90,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                 <?php if (count($movies) > 0): ?>
                     <?php foreach ($movies as $movie): ?>
                         <div class="movie-card">
-                            <img src="<?php echo htmlspecialchars($movie['poster'] ?? 'images/placeholder-movie.jpg'); ?>" alt="<?php echo htmlspecialchars($movie['title']); ?>" class="movie-image">
+                            <img src="<?php echo htmlspecialchars($movie['banner'] ?? 'images/placeholder-movie.jpg'); ?>" alt="<?php echo htmlspecialchars($movie['title']); ?>" class="movie-image">
                             <div class="movie-details">
                                 <h3 class="movie-title"><?php echo htmlspecialchars($movie['title']); ?></h3>
                                 <p class="movie-info"><?php echo htmlspecialchars($movie['genre']); ?> | <?php echo htmlspecialchars($movie['duration']); ?> mins | <?php echo htmlspecialchars($movie['rating']); ?></p>
@@ -87,6 +104,23 @@ while ($row = mysqli_fetch_assoc($result)) {
                     <?php endforeach; ?>
                 <?php else: ?>
                     <p>No movies found for the selected filter.</p>
+                <?php endif; ?>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <?php if ($page > 1): ?>
+                    <a href="?genre=<?php echo urlencode($genreFilter); ?>&sort=<?php echo urlencode($sortOrder); ?>&page=<?php echo $page - 1; ?>" class="page-btn prev-btn">Previous</a>
+                <?php endif; ?>
+
+                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                    <a href="?genre=<?php echo urlencode($genreFilter); ?>&sort=<?php echo urlencode($sortOrder); ?>&page=<?php echo $i; ?>" class="page-btn <?php echo $i === $page ? 'active' : ''; ?>">
+                        <?php echo $i; ?>
+                    </a>
+                <?php endfor; ?>
+
+                <?php if ($page < $totalPages): ?>
+                    <a href="?genre=<?php echo urlencode($genreFilter); ?>&sort=<?php echo urlencode($sortOrder); ?>&page=<?php echo $page + 1; ?>" class="page-btn next-btn">Next</a>
                 <?php endif; ?>
             </div>
         </div>
