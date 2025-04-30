@@ -6,12 +6,9 @@
     box-sizing: border-box;
     font-family: Inter, sans-serif;
   }
-  
-  html, body {
-  }
-  
+   
   body {
-    background-image: url('images/width_800_upscayl_2x_upscayl-standard-4x.png');
+    background-image: url('/images/width_800_upscayl_2x_upscayl-standard-4x.png');
     background-size: cover;
     background-position: center;
     background-repeat: repeat;

@@ -1,8 +1,8 @@
-<?php
+<?php 
 session_start();
 
-?>
 
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -14,9 +14,9 @@ session_start();
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-<?php include("header.php")
+<?php include("header.php");
 ?>
-
+  
   <section class="hero">
     <h1>Experience Movies Like Never Before</h1>
     <p>Book your tickets online and skip the queues</p>

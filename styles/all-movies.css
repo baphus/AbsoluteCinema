@@ -9,7 +9,7 @@
 
 body {
     background-color: #f0f0f0;
-    background-image: url("images/width_800_upscayl_2x_upscayl-standard-4x.png"); 
+    background-image: url("/images/width_800_upscayl_2x_upscayl-standard-4x.png"); 
     background-blend-mode: overlay;
     background-size: cover;
     background-attachment: scroll;
@@ -220,7 +220,7 @@ main {
 }
 
 .page-btn:hover, .page-btn.active {
-    background-color: #4aafdb;
+    background-color: #e62e2e;
     color: white;
 }
 

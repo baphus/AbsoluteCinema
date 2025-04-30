@@ -1,8 +1,7 @@
 <?php
-include("config.php");
-
 session_start();
-
+include("config.php");
+include("modal.html");
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = mysqli_real_escape_string($conn, $_POST['email']);
     $password = $_POST['password'];
@@ -17,17 +16,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Verify the password
         if (password_verify($password, $user['password'])) {
             // Set session variables
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_name'] = $user['firstname'];
-
+            $_SESSION['user_id'] = $user['user_id'];
+            $_SESSION['user_name'] = $user['first_name'];
+              
             // Redirect to the homepage
             header("Location: index.php");
-            exit;
+       exit;
         } else {
-            echo '<script>alert("Invalid password.");</script>';
+            echo '<script>showModal("Invalid password.");</script>';
         }
     } else {
-        echo '<script>alert("Invalid email or password.");</script>';
+        echo '<script>showModal("Invalid email or password.");</script>';
     }
 }
 ?>
@@ -56,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <button type="submit" class="red-btn">Login</button>
 
         <div class="login-text"> 
-          <p>Don't have an account? <a class="register-link" href="register.php">Register</a></p>
+          <p>Don't have an account? <a class="register-link" href="/admin/pages/register.php">Register</a></p>
         </div>
 
         <div class="terms-container">

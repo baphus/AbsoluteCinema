@@ -4,42 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Absolute Cinema</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/admin/styles/dashboard.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
-
-    <header>
-        <div class="logo">
-            Absolute<span style="color: #1a2f38;">Cinema</span>
-            <span class="logo-icon" ><img src="https://media.tenor.com/CRvLNVqXRVIAAAAi/etiqueta2.gif" alt="Logo" width="50" height="50"></span>
-        </div>
-    </header>
+    <?php include("header.php")?>
 
     <div class="dashboard-layout">
-
-        <aside class="sidebar">
-            <nav class="sidebar-nav">
-                <ul>
-                    <li><a href="dashboard.html"><span class="icon"><i class="fas fa-tachometer-alt"></i></span> Dashboard</a></li>
-                    <li><a href="movies.html"><span class="icon"><i class="fas fa-film"></i></span> Movies</a></li>
-                    <li class="active"><a href="#"><span class="icon"><i class="fas fa-clock"></i></span> Showtimes</a></li>
-                    <li><a href="screens.html"><span class="icon"><i class="fas fa-tv"></i></span> Screens</a></li>
-                    <li><a href="bookings.html"><span class="icon"><i class="fas fa-ticket-alt"></i></span> Bookings</a></li>
-                    <li><a href="seatings.html"><span class="icon"><i class="fas fa-chair"></i></span> Seatings</a></li>
-                    <li><a href="users.html"><span class="icon"><i class="fas fa-users"></i></span> Users</a></li>
-                </ul>
-            </nav>
-            <div class="sidebar-footer">
-                <div class="user-info">
-                    <span class="icon"><i class="fas fa-user-circle"></i></span> Hello, Admin
-                </div>
-                <button class="btn btn-logout">Log out</button>
-            </div>
-        </aside>
+    <?php include("sidebar.php")?>
 
         <main class="main-content">
             <div class="main-header">

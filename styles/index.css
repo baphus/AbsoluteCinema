@@ -9,27 +9,18 @@
 
 body {
     background-color: #f0f0f0;
-    background-image: url("images/width_800_upscayl_2x_upscayl-standard-4x.png"); 
+    background-image: url("/images/width_800_upscayl_2x_upscayl-standard-4x.png"); 
     background-blend-mode: overlay;
     background-size: cover;
     background-attachment:scroll;
     color: #333;
 }
 
-/* Header */
-header {
-    background-color: #4aafdb;
-    padding: 15px 30px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
 .logo {
     display: flex;
     align-items: center;
     font-size: 24px;
-    font-weight: 800;
+    font-weight: 800;  
     color: white;
     text-decoration: none;
 }

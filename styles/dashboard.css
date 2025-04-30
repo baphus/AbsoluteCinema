@@ -6,7 +6,7 @@
 }
 
 body {
-  font-family: "IBM Plex Sans";
+  font-family: "Inter";
   background-color: #f0f2f5;
   color: #333;
   line-height: 1.5;
@@ -18,7 +18,9 @@ a {
 }
 
 ul {
+  font-family: "IBM Plex Sans";
   list-style: none;
+  width: 250px;
 }
 
 .icon {
@@ -28,19 +30,9 @@ ul {
   text-align: center;
 }
 
-/* Header Styles */
-header {
-  background-color: #4193c3;
-  color: white;
-  padding: 15px 20px;
-  display: flex;
-  align-items: center;
-  height: 70px; /* optional but clean */
-}
-
 .logo {
   display: flex;
-  align-items: center;
+  align-items:self-start;
   font-size: 24px;
   font-weight: bold;
 }
@@ -55,103 +47,6 @@ header {
   min-height: 100vh;
 }
 
-/* Sidebar Styles */
-.sidebar {
-  width: 250px;
-  background-color: #4193c3;
-  color: #17242a;
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  transition: all 0.3s;
-  min-height: calc(100vh - 70px);
-  position: relative;
-}
-
-.sidebar-header {
-  padding: 20px 15px;
-  border-bottom: 1px solid #31729a;
-}
-
-.sidebar-header .logo {
-  font-size: 1.8em;
-  font-weight: bold;
-  color: #fff;
-}
-.sidebar-header .logo span {
-  color: #17242a;
-}
-
-.sidebar-nav {
-  flex-grow: 1;
-  padding-top: 20px;
-}
-
-.sidebar-nav ul li a {
-  display: flex;
-  align-items: center;
-  padding: 14px 25px;
-  color: #17242a;
-  font-weight: bold;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.sidebar-nav ul li a:hover {
-  background-color: rgba(23, 36, 42, 0.2);
-  color: #fff;
-}
-
-.sidebar-nav ul li.active a {
-  background-color: #17242a;
-  color: #fff;
-  font-weight: bold;
-}
-.sidebar-nav ul li.active a::before {
-  content: "";
-  width: 5px;
-  height: 100%;
-  background-color: red;
-  position: absolute;
-  left: 0;
-  top: 0;
-}
-
-/* Sidebar Footer */
-.sidebar-footer {
-  padding: 20px 15px;
-  border-top: 1px solid #31729a;
-}
-
-.sidebar-footer .user-info {
-  margin-bottom: 15px;
-  font-size: 0.9em;
-  display: flex;
-  align-items: center;
-  color: #fff;
-}
-
-.btn {
-  padding: 12px 18px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 1em;
-  font-weight: bold;
-  transition: all 0.3s ease;
-}
-
-.btn-logout {
-  background-color: #17242a;
-  color: #fff;
-  width: 100%;
-  text-align: center;
-}
-
-.btn-logout:hover {
-  background-color: #3c5064;
-  transform: translateY(-2px);
-}
 /* Main Content Styles */
 .main-content {
   flex-grow: 1;

@@ -1,5 +1,4 @@
 <?php 
-session_start();
 include("config.php");
 
 // Initialize variables
@@ -9,7 +8,7 @@ $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $moviesPerPage = 9; // Number of movies per page
 $offset = ($page - 1) * $moviesPerPage;
 
-// Fetch genres from the database
+//this code block finds the distinct genres using SELECT DISTINCT
 $genresQuery = "SELECT DISTINCT genre FROM movies";
 $genresResult = mysqli_query($conn, $genresQuery);
 $genres = [];
@@ -17,7 +16,6 @@ while ($row = mysqli_fetch_assoc($genresResult)) {
     $genres[] = $row['genre'];
 }
 
-// Build the query for movies
 $query = "SELECT * FROM movies";
 if ($genreFilter !== 'all') {
     $query .= " WHERE genre = '" . mysqli_real_escape_string($conn, $genreFilter) . "'";
@@ -34,13 +32,11 @@ if (!$result) {
     die("Query failed: " . mysqli_error($conn));
 }
 
-// Fetch movies into an array
 $movies = [];
 while ($row = mysqli_fetch_assoc($result)) {
     $movies[] = $row;
 }
 
-// Get the total number of movies for pagination
 $countQuery = "SELECT COUNT(*) as total FROM movies";
 if ($genreFilter !== 'all') {
     $countQuery .= " WHERE genre = '" . mysqli_real_escape_string($conn, $genreFilter) . "'";
@@ -56,7 +52,7 @@ $totalPages = ceil($totalMovies / $moviesPerPage);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AbsoluteCinema - Movies</title>
-    <link rel="stylesheet" href="styles/all-movies.css">
+    <link rel="stylesheet" href="/styles/all-movies.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
 </head>
 <body>
