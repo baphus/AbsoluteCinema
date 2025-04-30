@@ -51,7 +51,7 @@
       <div class="logo">
         Absolute<span style="color: #1a2f38;">Cinema</span>
         <span class="logo-icon">
-          <img src="styles/images/absolute-cinemalogo.png" alt="Logo" width="50" height="50" style="color: #1a2f38;"/>
+          <img src="styles/images/logo.gif" alt="Logo" width="50" height="50" style="color: #1a2f38;"/>
         </span>
       </div>
       <nav>
