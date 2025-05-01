@@ -5,18 +5,19 @@ include("config.php");
 $genreFilter = isset($_GET['genre']) ? $_GET['genre'] : 'all';
 $sortOrder = isset($_GET['sort']) ? $_GET['sort'] : 'a-z';
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$moviesPerPage = 9; // Number of movies per page
-$offset = ($page - 1) * $moviesPerPage;
+$moviesPerPage = 6; // Number of movies per page
+$offset = ($page - 1) * $moviesPerPage; 
 
 //this code block finds the distinct genres using SELECT DISTINCT
-$genresQuery = "SELECT DISTINCT genre FROM movies";
+$genresQuery = "SELECT DISTINCT genre FROM movies WHERE status = 'SHOWING'";
 $genresResult = mysqli_query($conn, $genresQuery);
 $genres = [];
 while ($row = mysqli_fetch_assoc($genresResult)) {
     $genres[] = $row['genre'];
 }
 
-$query = "SELECT * FROM movies";
+//sorts by genre or ALL
+$query = "SELECT * FROM movies WHERE status = 'SHOWING'";
 if ($genreFilter !== 'all') {
     $query .= " WHERE genre = '" . mysqli_real_escape_string($conn, $genreFilter) . "'";
 }

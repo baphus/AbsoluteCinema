@@ -1,34 +1,41 @@
 <?php 
-  include("config.php");
+include("config.php");
+include("modal.html");
 
-  if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-      $firstname = mysqli_real_escape_string($conn, $_POST['firstname']);
-      $lastname = mysqli_real_escape_string($conn, $_POST['lastname']);
-      $email = mysqli_real_escape_string($conn, $_POST['email']);
-      $phone = mysqli_real_escape_string($conn, $_POST['phone']);
-      $password = $_POST['password'];
-      $confirmpassword = $_POST['confirmpassword'];
-  
-      // Check if passwords match
-      if ($password !== $confirmpassword) {
-          echo "Passwords do not match.";
-          exit;
-      }
-  
-      // Hash the password
-      $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-  
-      // Insert the user into the database
-      $query = "INSERT INTO users (first_name, last_name, email, phone, password) VALUES ('$firstname', '$lastname', '$email', '$phone', '$hashed_password')";
-  
-      if (mysqli_query($conn, $query)) {
-          header("Location: login.php"); 
-          echo '<script> alert("Successfully registered.") </script>';
-          exit;
-      } else {
-          echo "Error: " . mysqli_error($conn);
-      }
-  }
+$error_message = ""; // Initialize an error message variable
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $firstname = mysqli_real_escape_string($conn, $_POST['firstname']);
+    $lastname = mysqli_real_escape_string($conn, $_POST['lastname']);
+    $email = mysqli_real_escape_string($conn, $_POST['email']);
+    $phone = mysqli_real_escape_string($conn, $_POST['phone']);
+    $password = $_POST['password'];
+    $confirmpassword = $_POST['confirmpassword'];
+
+    // Check if email already exists
+    $emailQuery = "SELECT email FROM users WHERE email = '$email'";
+    $emailResult = mysqli_query($conn, $emailQuery);
+
+    if (mysqli_num_rows($emailResult) > 0) {
+        $error_message = "This email is already taken.";
+    } else {
+        // Check if passwords match
+        if ($password === $confirmpassword) {
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            $query = "INSERT INTO users (first_name, last_name, email, phone, password) VALUES ('$firstname', '$lastname', '$email', '$phone', '$hashed_password')";
+            
+            if (mysqli_query($conn, $query)) {
+                echo '<script>showModal("Successfully registered.");</script>';
+                header("Location: login.php");
+                exit;
+            } else {
+                $error_message = "Error: Unable to register.";
+            }
+        } else {
+            $error_message = "Passwords do not match.";
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -43,6 +50,10 @@
   <main>
     <form class="form-box" method="POST" action="register.php">
       <h2>Create an Account</h2>
+      
+      <?php if (!empty($error_message)): ?>
+        <script>showModal("<?php echo $error_message; ?>");</script>
+      <?php endif; ?>
       
       <div class="input-group">
         <label for="firstname">First name</label>
@@ -84,11 +95,8 @@
       <div class="login-text">
         Already have an account? <a href="login.php" style="color: #ff3a3a;">Login</a>
       </div>
-    </div>
+    </form>
   </main>
   <?php include ("footer.php")?>
 </body>
-  <script> 
-    
-  </script>
 </html>

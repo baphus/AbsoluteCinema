@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <button type="submit" class="red-btn">Login</button>
 
         <div class="login-text"> 
-          <p>Don't have an account? <a class="register-link" href="/admin/pages/register.php">Register</a></p>
+          <p>Don't have an account? <a class="register-link" href="/register.php">Register</a></p>
         </div>
 
         <div class="terms-container">
