@@ -1,3 +1,23 @@
+<?php 
+include("config.php");
+
+// Fetch the user's role from the database
+if (isset($_SESSION['user_id'])) {
+    $user_id = $_SESSION['user_id'];
+    $findRoleQuery = "SELECT role FROM users WHERE user_id = '$user_id'";
+    $result = mysqli_query($conn, $findRoleQuery);
+
+    if ($result && mysqli_num_rows($result) > 0) {
+        $user = mysqli_fetch_assoc($result);
+        $userRole = $user['role'];
+    } else {
+        $userRole = null; // Default to null if no role is found
+    }
+} else {
+    $userRole = null; // Default to null if no user is logged in
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -79,8 +99,6 @@
   .dropdown:hover .dropdown-content {
     display: block;
   }
-
-
   </style>
 </head>
 <body>
@@ -100,7 +118,10 @@
       <div class="dropdown">
         <a href="#" class="dropbtn"><?= htmlspecialchars($_SESSION['user_name']); ?></a>
         <div class="dropdown-content">
-          <a href="user-profile.php">Profile</a>
+          <a href="user-profile.php" class="">Profile</a>
+          <?php if ($userRole === 'admin'): ?>
+            <a href="dashboard.php">Admin Dashboard</a>
+          <?php endif; ?>
           <a href="logout.php">Log Out</a>
         </div>
       </div>

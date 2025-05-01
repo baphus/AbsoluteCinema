@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Absolute Cinema</title>
-    <link rel="stylesheet" href="/admin/styles/dashboard.css">
+    <link rel="stylesheet" href="/styles/dashboard.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
@@ -67,11 +67,5 @@
         </main>
 
     </div>
-
-    <script src="admin_script.js"></script>
-    <p class="flaticon-attribution">
-        <a href="https://www.flaticon.com/free-icons/dashboard" title="dashboard icons"></a>
-    </p>
-
 </body>
 </html>
