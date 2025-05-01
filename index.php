@@ -109,7 +109,6 @@ while ($row = mysqli_fetch_assoc($resultUpcoming)) {
             <div class="movie-details">
               <h3 class="movie-title"><?php echo htmlspecialchars($movie['title']); ?></h3>
               <p class="movie-info"><?php echo htmlspecialchars($movie['genre']); ?> | <?php echo htmlspecialchars($movie['duration']); ?> mins | <?php echo htmlspecialchars($movie['rating']); ?></p>
-              <a href="details.php?movie=<?php echo urlencode($movie['title']); ?>" class="details-btn">Details</a>
             </div>
           </div>
         <?php endforeach; ?>
