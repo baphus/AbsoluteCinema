@@ -1,5 +1,16 @@
 <?php
+session_start();
 include("config.php");
+
+// Check if the user is logged in
+if (!isset($_SESSION['user_id'])) {
+    error_log("User ID not set in session. Redirecting to login.");
+    header("Location: login.php");
+    exit;
+} else {
+    $userID = $_SESSION['user_id'];
+    error_log("User ID: $userID");
+}
 
 // Check if movie_id is provided in the URL
 if (isset($_GET['movie_id'])) {

@@ -98,7 +98,6 @@ while ($row = mysqli_fetch_assoc($resultUpcoming)) {
   <section>
     <div class="section-header">
       <h2>Upcoming Movies</h2>
-      <a href="all-movies.php?filter=upcoming" class="view-all">View all</a>
     </div>
     
     <div class="movie-cards">

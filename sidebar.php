@@ -2,7 +2,7 @@
     /* Sidebar Styles */
 .sidebar {
   width: 250px;
-  background-color: #4193c3;
+  background-color: #3498db;
   color: #17242a;
   display: flex;
   flex-direction: column;
