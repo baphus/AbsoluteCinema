@@ -1,7 +1,6 @@
 <?php 
 session_start();
 include("config.php");
-
 // Initialize variables
 $genreFilter = isset($_GET['genre']) ? $_GET['genre'] : 'all';
 $sortOrder = isset($_GET['sort']) ? $_GET['sort'] : 'a-z';

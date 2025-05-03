@@ -165,7 +165,6 @@ ul {
   color: #6c757d;
 }
 
-/* Movie Management Header */
 .movie-management-header {
   display: flex;
   justify-content: space-between;
@@ -227,6 +226,7 @@ ul {
   font-size: 0.9em;
   font-weight: bold;
   transition: background-color 0.3s ease, transform 0.2s ease;
+  margin-right: 10px;
 }
 
 .btn-add-movie:hover {
@@ -267,6 +267,91 @@ ul {
 }
 
 .movie-list-table .actions {
+  text-align: center;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  color: #777;
+  font-size: 1em;
+  margin-left: 5px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  padding: 5px;
+  border-radius: 4px;
+}
+
+.btn-icon:hover {
+  color: #333;
+}
+
+.btn-edit {
+  color: #007bff;
+}
+
+.btn-edit:hover {
+  color: #0056b3;
+}
+
+.btn-delete {
+  color: #dc3545;
+}
+
+.btn-delete:hover {
+  color: #c82333;
+}
+
+/* User List Table */
+.user-management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.user-management-header h2 {
+  font-size: 1.5em;
+  color: #555;
+  margin: 0;
+}
+
+.user-list-table {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  overflow-x: auto; /* For horizontal scrolling if the table is too wide */
+}
+
+.user-list-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.user-list-table th,
+.user-list-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9em;
+  color: #555;
+}
+
+.user-list-table th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+  color: #333;
+}
+
+.user-list-table tbody tr:hover {
+  background-color: #f5f5f5;
+}
+
+.user-list-table .actions {
   text-align: center;
 }
 

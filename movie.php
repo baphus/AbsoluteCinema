@@ -45,7 +45,7 @@ if (isset($_GET['movie_id'])) {
         .movie-hero {
             background: url('<?php echo htmlspecialchars($movie['banner']); ?>') no-repeat center center;
             background-size: cover;
-            height: 300px; /* Adjust height as needed */
+            height: 300px; 
             display: flex;
             align-items: center;
             justify-content: center;

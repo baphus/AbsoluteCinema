@@ -1,7 +1,7 @@
 <?php
 session_start();
 include("config.php");
-include("modal.html");
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = mysqli_real_escape_string($conn, $_POST['email']);
     $password = $_POST['password'];
@@ -18,15 +18,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Set session variables
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['user_name'] = $user['first_name'];
-              
+            
             // Redirect to the homepage
             header("Location: index.php");
-       exit;
+            exit;
         } else {
-            echo '<script>showModal("Invalid password.");</script>';
+            echo '<script>alert("Invalid password.");</script>';
         }
     } else {
-        echo '<script>showModal("Invalid email or password.");</script>';
+        echo '<script>alert("Invalid email or password.");</script>';
     }
 }
 ?>
@@ -34,10 +34,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles/login.css">
   <title>Log In Page | Absolute Cinema</title>
-  <link rel="stylesheet" href="styles/login.css" />
 </head>
 <body>
   <div class="page-container">
@@ -45,10 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <main>
       <form class="form-box" method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]) ?>">
         <h2>Log In</h2>
-        <input type="email" name="email" placeholder="Email"  required />
+        <input type="email" name="email" placeholder="Email" required />
         <input type="password" name="password" placeholder="Password" required />
         <div class="form-options checkbox-container" style="justify-content: space-between;">
-          <label><input type="checkbox" name="checkbox"  /> Remember me</label>
+          <label><input type="checkbox" name="checkbox" /> Remember me</label>
           <a class="forgotpass" href="#">Forgot Password?</a>
         </div>
 
@@ -63,9 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
       </form>
     </main>
-
   </div>
   <?php include("footer.php")?>
-
 </body>
 </html>

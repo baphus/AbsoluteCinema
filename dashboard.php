@@ -1,3 +1,34 @@
+<?php 
+session_start();
+include("config.php");
+
+// Fetch total users
+$totalUsersQuery = "SELECT COUNT(*) AS total_users FROM users";
+$totalUsersResult = mysqli_query($conn, $totalUsersQuery);
+$totalUsers = 0;
+if ($totalUsersResult) {
+    $row = mysqli_fetch_assoc($totalUsersResult);
+    $totalUsers = $row['total_users'];
+}
+
+// Fetch total movies
+$totalMoviesQuery = "SELECT COUNT(*) AS total_movies FROM movies";
+$totalMoviesResult = mysqli_query($conn, $totalMoviesQuery);
+$totalMovies = 0;
+if ($totalMoviesResult) {
+    $row = mysqli_fetch_assoc($totalMoviesResult);
+    $totalMovies = $row['total_movies'];
+}
+
+// Fetch total bookings
+$totalBookingsQuery = "SELECT COUNT(*) AS total_bookings FROM bookings";
+$totalBookingsResult = mysqli_query($conn, $totalBookingsQuery);
+$totalBookings = 0;
+if ($totalBookingsResult) {
+    $row = mysqli_fetch_assoc($totalBookingsResult);
+    $totalBookings = $row['total_bookings'];
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,15 +48,14 @@
     <?php include("sidebar.php")?>
     
         <main class="main-content">
-            <div class="main-header">
-                </div>
+            <div class="main-header"></div>
 
             <div class="content-wrapper">
                 <section class="summary-cards">
                     <div class="card summary-card">
                         <div class="card-content">
                             <h4>TOTAL USERS</h4>
-                            <span class="count" id="total-users">--</span>
+                            <span class="count" id="total-users"><?php echo $totalUsers; ?></span>
                             <span class="change positive" id="users-change">↑ --%</span>
                         </div>
                         <div class="card-icon users">
@@ -36,7 +66,7 @@
                     <div class="card summary-card">
                         <div class="card-content">
                             <h4>TOTAL MOVIES</h4>
-                            <span class="count" id="total-movies">--</span>
+                            <span class="count" id="total-movies"><?php echo $totalMovies; ?></span>
                             <span class="change positive" id="movies-change">↑ --%</span>
                         </div>
                         <div class="card-icon movies">
@@ -47,7 +77,7 @@
                     <div class="card summary-card">
                         <div class="card-content">
                             <h4>TOTAL BOOKINGS</h4>
-                            <span class="count" id="total-bookings">--</span>
+                            <span class="count" id="total-bookings"><?php echo $totalBookings; ?></span>
                             <span class="change positive" id="bookings-change">↑ --%</span>
                         </div>
                         <div class="card-icon bookings">

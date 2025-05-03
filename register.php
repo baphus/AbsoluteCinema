@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $emailResult = mysqli_query($conn, $emailQuery);
 
     if (mysqli_num_rows($emailResult) > 0) {
-        $error_message = "This email is already taken.";
+        echo '<script>alert("This email is already taken.");</script>';
     } else {
         // Check if passwords match
         if ($password === $confirmpassword) {
@@ -25,14 +25,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $query = "INSERT INTO users (first_name, last_name, email, phone, password) VALUES ('$firstname', '$lastname', '$email', '$phone', '$hashed_password')";
             
             if (mysqli_query($conn, $query)) {
-                echo '<script>showModal("Successfully registered.");</script>';
+                echo '<script>alert("Successfully registered.");</script>';
                 header("Location: login.php");
                 exit;
             } else {
-                $error_message = "Error: Unable to register.";
+                echo '<script>alert("Error: Unable to register.");</script>';
             }
         } else {
-            $error_message = "Passwords do not match.";
+            echo '<script>alert("Passwords do not match.");</script>';
         }
     }
 }
@@ -50,10 +50,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <main>
     <form class="form-box" method="POST" action="register.php">
       <h2>Create an Account</h2>
-      
-      <?php if (!empty($error_message)): ?>
-        <script>showModal("<?php echo $error_message; ?>");</script>
-      <?php endif; ?>
       
       <div class="input-group">
         <label for="firstname">First name</label>

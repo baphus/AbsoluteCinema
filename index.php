@@ -1,7 +1,6 @@
 <?php 
 session_start();
 include("config.php");
-
 // Fetch Featured Movies
 $queryFeatured = "SELECT * FROM movies WHERE status = 'SHOWING' LIMIT 3;";
 $resultFeatured = mysqli_query($conn, $queryFeatured);
@@ -63,7 +62,7 @@ while ($row = mysqli_fetch_assoc($resultUpcoming)) {
             <div class="movie-details">
               <h3 class="movie-title"><?php echo htmlspecialchars($movie['title']); ?></h3>
               <p class="movie-info"><?php echo htmlspecialchars($movie['genre']); ?> | <?php echo htmlspecialchars($movie['duration']); ?> mins | <?php echo htmlspecialchars($movie['rating']); ?></p>
-              <a href="booking.html?movie=<?php echo urlencode($movie['title']); ?>" class="book-now-btn">Book Now</a>
+              <a href="booking.html?movie_id=<?php echo urlencode($movie['movie_id']); ?>" class="book-now-btn">Book Now</a>
             </div>
           </div>
         <?php endforeach; ?>
