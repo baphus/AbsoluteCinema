@@ -1,8 +1,9 @@
 <?php
+session_start();
+
 include("config.php");
 
 // Check if the user is logged in and has the "admin" role
-session_start();
 if (!isset($_SESSION['user_name']) || $_SESSION['role'] !== 'admin') {
     // Redirect to the login page if the user is not an admin
     header("Location: login.php");
@@ -125,7 +126,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_movie'])) {
                     status = ?, 
                     poster = ?, 
                     banner = ? 
-                    WHERE movie_id = ?";
+                    WHERE movie_id = ?";  
 
     $stmt = mysqli_prepare($conn, $updateQuery);
     mysqli_stmt_bind_param($stmt, "ssisssssssi", 
@@ -223,26 +224,16 @@ if (!$result) {
     <div class="dashboard-layout">
       <?php include("sidebar.php") ?>
       <main class="main-content">
-        <div class="main-header"></div>
-
-        <div class="content-wrapper">
-          <?php if (isset($success_message)): ?>
-            <div class="alert alert-success"><?php echo $success_message; ?></div>
-          <?php endif; ?>
-
-          <?php if (isset($error_message)): ?>
-            <div class="alert alert-danger"><?php echo $error_message; ?></div>
-          <?php endif; ?>
-
-          <div class="movie-management-header">
+          <div class="content-wrapper">
+          <div class="management-header">
             <h2>Movie Management</h2>
-            <div class="movie-management-actions">
-              <button id="add-movie-btn" class="btn-add-movie">
+            <div>
+              <button id="add-movie-btn" class="btn">
                 <i class="fas fa-plus"></i> Add Movie
               </button>
               <form method="GET" action="movies.php" id="sort-form">
                 <label for="sort-by">Sort by:</label>
-                <select id="sort-by" name="sort-by" onchange="sortMovies()">
+                <select id="sort-by" name="sort-by" onchange="document.getElementById('sort-form').submit();">
                   <option value="movie_id" <?php echo $sortBy === 'movie_id' ? 'selected' : ''; ?>>By ID</option>
                   <option value="title" <?php echo $sortBy === 'title' ? 'selected' : ''; ?>>By Title</option>
                   <option value="genre" <?php echo $sortBy === 'genre' ? 'selected' : ''; ?>>By Genre</option>
@@ -253,14 +244,12 @@ if (!$result) {
                   <option value="release_date" <?php echo $sortBy === 'release_date' ? 'selected' : ''; ?>>By Release Date</option>
                   <option value="date_added" <?php echo $sortBy === 'date_added' ? 'selected' : ''; ?>>By Date Added</option>
                   <option value="status" <?php echo $sortBy === 'status' ? 'selected' : ''; ?>>By Status</option>
-                  <option value="poster" <?php echo $sortBy === 'poster' ? 'selected' : ''; ?>>By Poster</option>
-                  <option value="banner" <?php echo $sortBy === 'banner' ? 'selected' : ''; ?>>By Banner</option>
                 </select>
               </form>
             </div>
           </div>
 
-          <div class="movie-list-table">
+          <div class="table">
             <table>
               <thead>
                 <tr>
@@ -280,40 +269,42 @@ if (!$result) {
                 </tr>
               </thead>
               <tbody>
-                <?php while ($movie = mysqli_fetch_assoc($result)): ?>
-                  <tr>
-                    <td><?php echo htmlspecialchars($movie['movie_id']); ?></td>
-                    <td><?php echo htmlspecialchars($movie['title']); ?></td>
-                    <td><?php echo htmlspecialchars($movie['genre']); ?></td>
-                    <td><?php echo htmlspecialchars($movie['duration']); ?> mins</td>
-                    <td><?php echo htmlspecialchars($movie['rating']); ?></td>
-                    <td><?php echo htmlspecialchars(substr($movie['description'], 0, 50) . '...'); ?></td>
-                    <td><?php echo htmlspecialchars($movie['director']); ?></td>
-                    <td><?php echo htmlspecialchars($movie['release_date']); ?></td>
-                    <td><?php echo htmlspecialchars($movie['date_added']); ?></td>
-                    <td><?php echo htmlspecialchars($movie['status']); ?></td>
-                    <td><img src="<?php echo htmlspecialchars($movie['poster']); ?>" alt="Poster" style="width: 50px;"></td>
-                    <td><img src="<?php echo htmlspecialchars($movie['banner']); ?>" alt="Banner" style="width: 100px;"></td>
-                    <td class="actions">
-                      <?php 
-                        $movieData = json_encode($movie);
-                        $movieData = htmlspecialchars($movieData, ENT_QUOTES);
-                      ?>
-                      <button class="btn-icon btn-edit" onclick="openEditModal('<?php echo $movie['movie_id']; ?>', '<?php echo $movie['title']; ?>', '<?php echo $movie['genre']; ?>', '<?php echo $movie['duration']; ?>', '<?php echo $movie['rating']; ?>', '<?php echo $movie['description']; ?>', '<?php echo $movie['director']; ?>', '<?php echo $movie['release_date']; ?>', '<?php echo $movie['status']; ?>', '<?php echo $movie['poster']; ?>', '<?php echo $movie['banner']; ?>')">
-                        <i class="fas fa-edit"></i>
-                      </button>
-                      <button class="btn-icon btn-delete">
-                        <i class="fas fa-trash-alt"></i>
-                      </button>
-                    </td>
-                  </tr>
-                <?php endwhile; ?>
+                <?php if (mysqli_num_rows($result) > 0): ?>
+                    <?php while ($movie = mysqli_fetch_assoc($result)): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($movie['movie_id']); ?></td>
+                            <td><?php echo htmlspecialchars($movie['title']); ?></td>
+                            <td><?php echo htmlspecialchars($movie['genre']); ?></td>
+                            <td><?php echo htmlspecialchars($movie['duration']); ?> mins</td>
+                            <td><?php echo htmlspecialchars($movie['rating']); ?></td>
+                            <td><?php echo htmlspecialchars(substr($movie['description'], 0, 50) . '...'); ?></td>
+                            <td><?php echo htmlspecialchars($movie['director']); ?></td>
+                            <td><?php echo htmlspecialchars($movie['release_date']); ?></td>
+                            <td><?php echo htmlspecialchars($movie['date_added']); ?></td>
+                            <td><?php echo htmlspecialchars($movie['status']); ?></td>
+                            <td><img src="<?php echo htmlspecialchars($movie['poster']); ?>" alt="Poster" style="width: 50px;"></td>
+                            <td><img src="<?php echo htmlspecialchars($movie['banner']); ?>" alt="Banner" style="width: 100px;"></td>
+                            <td class="actions">
+                                <button class="btn-icon btn-edit" onclick="openEditModal('<?php echo $movie['movie_id']; ?>', '<?php echo $movie['title']; ?>', '<?php echo $movie['genre']; ?>', '<?php echo $movie['duration']; ?>', '<?php echo $movie['rating']; ?>', '<?php echo $movie['description']; ?>', '<?php echo $movie['director']; ?>', '<?php echo $movie['release_date']; ?>', '<?php echo $movie['status']; ?>', '<?php echo $movie['poster']; ?>', '<?php echo $movie['banner']; ?>')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-icon btn-delete">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="13">No movies found.</td>
+                    </tr>
+                <?php endif; ?>
               </tbody>
             </table>
           </div>
-        </div>
+        </div>  
       </main>
     </div>
-    <?php include("modal.html")?>
+    <?php include("edit-movie-modal.html") ?>
   </body>
 </html>

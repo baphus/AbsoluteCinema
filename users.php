@@ -25,7 +25,10 @@ $result = mysqli_query($conn, $getUsersQuery);
 
 if (!$result) {
     die("Query failed: " . mysqli_error($conn));
+} else {
+    echo "Query executed successfully. Rows returned: " . mysqli_num_rows($result);
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -46,14 +49,11 @@ if (!$result) {
     <?php include("header.php") ?>
     <div class="dashboard-layout">
         <?php include("sidebar.php") ?>
-
         <main class="main-content">
-            <div class="main-header"></div>
-
             <div class="content-wrapper">
-                <div class="user-management-header">
+                <div class="management-header">
                     <h2>User Management</h2>
-                    <div class="user-management-actions">
+                    <div>
                         <form method="GET" action="users.php" id="sort-form">
                             <label for="sort-by">Sort by:</label>
                             <select id="sort-by" name="sort-by" onchange="sortUsers()">
@@ -69,7 +69,7 @@ if (!$result) {
                     </div>
                 </div>
 
-                <div class="user-list-table">
+                <div class="table">
                     <table>
                         <thead>
                             <tr>
@@ -84,29 +84,32 @@ if (!$result) {
                             </tr>
                         </thead>
                         <tbody>
-                            <?php while ($user = mysqli_fetch_assoc($result)): ?>
+                            <?php if (mysqli_num_rows($result) > 0): ?>
+                                <?php while ($user = mysqli_fetch_assoc($result)): ?>
+                                    <?php echo "<pre>"; print_r($user); echo "</pre>"; ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($user['user_id']); ?></td>
+                                        <td><?php echo htmlspecialchars($user['first_name']); ?></td>
+                                        <td><?php echo htmlspecialchars($user['last_name']); ?></td>
+                                        <td><?php echo htmlspecialchars($user['email']); ?></td>
+                                        <td><?php echo htmlspecialchars($user['phone']); ?></td>
+                                        <td><?php echo htmlspecialchars($user['role']); ?></td>
+                                        <td><?php echo htmlspecialchars($user['created_at']); ?></td>
+                                        <td class="actions">
+                                            <button class="btn-icon btn-edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn-icon btn-delete">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
                                 <tr>
-                                    <td><?php echo htmlspecialchars($user['user_id']); ?></td>
-                                    <td><?php echo htmlspecialchars($user['first_name']); ?></td>
-                                    <td><?php echo htmlspecialchars($user['last_name']); ?></td>
-                                    <td><?php echo htmlspecialchars($user['email']); ?></td>
-                                    <td><?php echo htmlspecialchars($user['phone']); ?></td>
-                                    <td><?php echo htmlspecialchars($user['role']); ?></td>
-                                    <td><?php echo htmlspecialchars($user['created_at']); ?></td>
-                                    <td class="actions">
-                                        <?php 
-                                            $userData = json_encode($user);
-                                            $userData = htmlspecialchars($userData, ENT_QUOTES);
-                                        ?>
-                                        <button class="btn-icon btn-edit" onclick="openEditModal('<?php echo $userData; ?>')">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn-icon btn-delete">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </td>
+                                    <td colspan="8">No users found.</td>
                                 </tr>
-                            <?php endwhile; ?>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
