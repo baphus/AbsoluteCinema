@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookings Management - Absolute Cinema</title>
+    <link rel="stylesheet" href="/dashboardstyle/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main class="main-content">
+        <div id="booking-content">
+            <!-- Booking Management Header -->
+            <div class="management-header">
+                <h2>Manage Bookings</h2>
+                <div class="management-actions">
+                    <div class="filter-section">
+                        <label for="filter-by-booking">Filter by:</label>
+                        <select id="filter-by-booking">
+                            <option>By Booking ID</option>
+                            <option>By Movie Name</option>
+                            <option>By Customer Name</option>
+                            <option>By Status</option>
+                            <option>By Date</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking List Table -->
+            <div class="management-list-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Movie Name</th>
+                            <th>Customer Name</th>
+                            <th>Seats</th>
+                            <th>Booking Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- No booking data yet -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

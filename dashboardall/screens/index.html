@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screens Management - Absolute Cinema</title>
+    <link rel="stylesheet" href="/dashboardstyle/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main class="main-content">
+        <div id="screens-content">
+            <!-- Screen Management Header -->
+            <div class="management-header">
+                <h2>Manage Screens</h2>
+                <div class="management-actions">
+                    <div class="filter-section">
+                        <label for="filter-by-screen">Filter by:</label>
+                        <select id="filter-by-screen">
+                            <option>By ID</option>
+                            <option>By Name</option>
+                            <option>By Capacity</option>
+                            <option>By Screen Type</option>
+                            <option>By Audio System</option>
+                            <option>By Status</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-add">+ Add Screen</button>
+                </div>
+            </div>
+
+            <!-- Screen List Table -->
+            <div class="management-list-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Capacity</th>
+                            <th>Screen Type</th>
+                            <th>Audio System</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- No screen data yet -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

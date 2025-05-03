@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seating Management - Absolute Cinema</title>
+  <link rel="stylesheet" href="/dashboardstyle/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans&family=Inter&family=Montserrat&family=Roboto&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+<body>
+    <main class="main-content">
+          <div class="management-header">
+            <h2>Seating Management</h2>
+            <div class="management-actions">
+              <div class="filter-section">
+                <label for="select-screen">Select Screen:</label>
+                <select id="select-screen">
+                  <option>Screen 1</option>
+                  <option>Screen 2</option>
+                  <option>Screen 3</option>
+                </select>
+              </div>
+              <div class="filter-section">
+                <label for="select-schedule">Select Schedule:</label>
+                <select id="select-schedule">
+                  <option>Inception - 2025-04-30 - 18:00</option>
+                  <option>Avengers: Endgame - 2025-05-01 - 20:30</option>
+                  <option>The Clockwerk Orange - 2025-05-01 - 20:30</option>
+                </select>
+              </div>
+            </div>
+          </div>
+    
+          <div class="management-list-table">
+            <div class="screen-label">SCREEN</div>
+            <div class="seats-grid">
+            <!---->
+              <div class="seat booked">A1</div>
+              <div class="seat vacant">A2</div>
+              <div class="seat vacant">A3</div>
+              <div class="seat vacant">A4</div>
+              <div class="seat vacant">A5</div>
+              <div class="seat vacant">A6</div>
+              <div class="seat booked">A7</div>
+    
+              <div class="seat booked">B1</div>
+              <div class="seat booked">B2</div>
+              <div class="seat booked">B3</div>
+              <div class="seat vacant">B4</div>
+              <div class="seat booked">B5</div>
+              <div class="seat vacant">B6</div>
+              <div class="seat vacant">B7</div>
+    
+              <div class="seat vacant">C1</div>
+              <div class="seat vacant">C2</div>
+              <div class="seat vacant">C3</div>
+              <div class="seat vacant">C4</div>
+              <div class="seat vacant">C5</div>
+              <div class="seat booked">C6</div>
+              <div class="seat vacant">C7</div>
+            </div>
+          </div>
+    
+          <div class="seating-legend">
+            <div class="legend-item">
+              <div class="seat booked-legend"></div>
+              <span>Booked</span>
+            </div>
+            <div class="legend-item">
+              <div class="seat vacant-legend"></div>
+              <span>Vacant</span>
+            </div>
+          </div>
+      </main>
+</body>
+</html>

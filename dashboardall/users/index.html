@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Management - Absolute Cinema</title>
+  <link rel="stylesheet" href="/dashboardstyle/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <main class="main-content">
+    <div id="user-management-content">
+      <!-- User Management Header -->
+      <div class="management-header">
+        <h2>User Management</h2>
+        <div class="management-actions">
+          <div class="filter-section">
+            <label for="filter-by-user">Filter by:</label>
+            <select id="filter-by-user">
+              <option value="id">By ID</option>
+              <option value="name">By Name</option>
+              <option value="email">By Email</option>
+              <option value="role">By Role</option>
+            </select>
+          </div>
+          <input type="text" placeholder="Search users..." class="filter-input" />
+          <button class="btn btn-add">+ Add User</button>
+        </div>
+      </div>
+
+      <!-- User List Table -->
+      <div class="management-list-table">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Password</th>
+              <th>Role</th>
+              <th>Created At</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
