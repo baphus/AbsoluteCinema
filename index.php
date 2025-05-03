@@ -44,7 +44,7 @@ while ($row = mysqli_fetch_assoc($resultUpcoming)) {
 <section class="hero">
   <h1>Experience Movies Like Never Before</h1>
   <p>Book your tickets online and skip the queues</p>
-  <a href="movies.html" class="cta-button">BOOK NOW</a>
+  <a href="all-movies.php" class="cta-button">BOOK NOW</a>
 </section>
 
 <main>

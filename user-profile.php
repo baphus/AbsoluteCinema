@@ -1,9 +1,16 @@
 <?php
 session_start();
+include("modal.html");
+include("config.php");
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
+} else{
+    $userID = $_SESSION['user_id'];
+    
 }
+
+
 ?>
 
 <!DOCTYPE html>
