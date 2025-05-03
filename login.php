@@ -7,8 +7,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'];
 
     // Query to check if the user exists
-    $query = "SELECT * FROM users WHERE email = '$email'";
-    $result = mysqli_query($conn, $query);
+    $query = "SELECT * FROM users WHERE email = ?";
+    $stmt = mysqli_prepare($conn, $query);
+    mysqli_stmt_bind_param($stmt, "s", $email);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
 
     if ($result && mysqli_num_rows($result) > 0) {
         $user = mysqli_fetch_assoc($result);
@@ -18,7 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Set session variables
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['user_name'] = $user['first_name'];
-            $_SESSION['role'] = $user['role'];
+            $_SESSION['role'] = $user['role']; // Ensure the role is stored in the session
+
             // Redirect to the homepage
             header("Location: index.php");
             exit;

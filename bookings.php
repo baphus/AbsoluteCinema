@@ -1,0 +1,199 @@
+<?php
+include("config.php");
+
+// Check if the user is logged in and has the "admin" role
+session_start();
+if (!isset($_SESSION['user_name']) || $_SESSION['role'] !== 'admin') {
+    header("Location: login.php");
+    exit();
+}
+
+// Process form submission for adding new bookings
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_booking'])) {
+    $user_id = $_POST['user_id'];
+    $showtime_id = $_POST['showtime_id'];
+    $booking_date = $_POST['booking_date'];
+    $total_price = $_POST['total_price'];
+    $status = $_POST['status'];
+
+    $insertQuery = "INSERT INTO bookings (user_id, showtime_id, booking_date, total_price, status) 
+                    VALUES (?, ?, ?, ?, ?)";
+    $stmt = mysqli_prepare($conn, $insertQuery);
+    mysqli_stmt_bind_param($stmt, "iisss", $user_id, $showtime_id, $booking_date, $total_price, $status);
+
+    if (mysqli_stmt_execute($stmt)) {
+        $success_message = "Booking added successfully!";
+    } else {
+        $error_message = "Error adding booking: " . mysqli_error($conn);
+    }
+
+    mysqli_stmt_close($stmt);
+}
+
+// Process form submission for updating bookings
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_booking'])) {
+    $booking_id = $_POST['booking_id'];
+    $user_id = $_POST['user_id'];
+    $showtime_id = $_POST['showtime_id'];
+    $booking_date = $_POST['booking_date'];
+    $total_price = $_POST['total_price'];
+    $status = $_POST['status'];
+
+    $updateQuery = "UPDATE bookings SET user_id = ?, showtime_id = ?, booking_date = ?, total_price = ?, status = ? 
+                    WHERE booking_id = ?";
+    $stmt = mysqli_prepare($conn, $updateQuery);
+    mysqli_stmt_bind_param($stmt, "iisssi", $user_id, $showtime_id, $booking_date, $total_price, $status, $booking_id);
+
+    if (mysqli_stmt_execute($stmt)) {
+        $success_message = "Booking updated successfully!";
+    } else {
+        $error_message = "Error updating booking: " . mysqli_error($conn);
+    }
+
+    mysqli_stmt_close($stmt);
+}
+
+// Fetch all bookings
+$getBookingsQuery = "SELECT * FROM bookings ORDER BY booking_id ASC";
+$result = mysqli_query($conn, $getBookingsQuery);
+
+if (!$result) {
+    die("Query failed: " . mysqli_error($conn));
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Bookings</title>
+    <link rel="stylesheet" href="/styles/dashboard.css">
+    <link rel="stylesheet" href="/styles/modal.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+
+        // Edit Booking Modal
+        const editModal = document.getElementById('editModal');
+        const editModalCloseBtn = document.querySelector('#editModal .close-btn');
+
+        window.openEditModal = function (booking_id, user_id, showtime_id, booking_date, total_price, status) {
+          document.getElementById('edit_booking_id').value = booking_id;
+          document.getElementById('edit_user_id').value = user_id;
+          document.getElementById('edit_showtime_id').value = showtime_id;
+          document.getElementById('edit_booking_date').value = booking_date;
+          document.getElementById('edit_total_price').value = total_price;
+          document.getElementById('edit_status').value = status;
+          editModal.style.display = 'block';
+        };
+
+        editModalCloseBtn.addEventListener('click', function () {
+          editModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', function (event) {
+          if (event.target == editModal) {
+            editModal.style.display = 'none';
+          }
+        });
+      });
+    </script>
+</head>
+<body>
+    <?php include("header.php") ?>
+    <div class="dashboard-layout">
+        <?php include("sidebar.php") ?>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <div class="management-header">
+                    <h2>Booking Management</h2>
+                </div>
+
+                <div class="table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>User ID</th>
+                                <th>Showtime ID</th>
+                                <th>Booking Date</th>
+                                <th>Total Price</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (mysqli_num_rows($result) > 0): ?>
+                                <?php while ($booking = mysqli_fetch_assoc($result)): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($booking['booking_id']); ?></td>
+                                        <td><?php echo htmlspecialchars($booking['user_id']); ?></td>
+                                        <td><?php echo htmlspecialchars($booking['showtime_id']); ?></td>
+                                        <td><?php echo htmlspecialchars($booking['booking_date']); ?></td>
+                                        <td>₱<?php echo htmlspecialchars(number_format($booking['total_price'], 2)); ?></td>
+                                        <td><?php echo htmlspecialchars($booking['status']); ?></td>
+                                        <td class="actions">
+                                            <button class="btn-icon btn-edit" onclick="openEditModal('<?php echo $booking['booking_id']; ?>', '<?php echo $booking['user_id']; ?>', '<?php echo $booking['showtime_id']; ?>', '<?php echo $booking['booking_date']; ?>', '<?php echo $booking['total_price']; ?>', '<?php echo $booking['status']; ?>')">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn-icon btn-delete" onclick="if(confirm('Are you sure you want to delete this booking?')) window.location.href='delete_booking.php?id=<?php echo $booking['booking_id']; ?>';">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="7" style="text-align: center;">No bookings found in the database.</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Booking Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Booking</h3>
+                <span class="close-btn">&times;</span>
+            </div>
+            <form method="POST" action="bookings.php">
+                <input type="hidden" id="edit_booking_id" name="booking_id">
+                <div class="form-group">
+                    <label for="edit_user_id">User ID</label>
+                    <input type="number" id="edit_user_id" name="user_id" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_showtime_id">Showtime ID</label>
+                    <input type="number" id="edit_showtime_id" name="showtime_id" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_booking_date">Booking Date</label>
+                    <input type="date" id="edit_booking_date" name="booking_date" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_total_price">Total Price</label>
+                    <input type="number" id="edit_total_price" name="total_price" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_status">Status</label>
+                    <select id="edit_status" name="status" required>
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" name="update_booking" class="btn">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

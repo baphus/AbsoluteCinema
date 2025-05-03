@@ -1,14 +1,14 @@
 <?php 
 include("config.php");
-include("modal.html");
-
 $error_message = ""; // Initialize an error message variable
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $user_id = uniqid("Cine");
     $firstname = mysqli_real_escape_string($conn, $_POST['firstname']);
     $lastname = mysqli_real_escape_string($conn, $_POST['lastname']);
     $email = mysqli_real_escape_string($conn, $_POST['email']);
     $phone = mysqli_real_escape_string($conn, $_POST['phone']);
+    $role = 'user';
     $password = $_POST['password'];
     $confirmpassword = $_POST['confirmpassword'];
 
@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Check if passwords match
         if ($password === $confirmpassword) {
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            $query = "INSERT INTO users (first_name, last_name, email, phone, password) VALUES ('$firstname', '$lastname', '$email', '$phone', '$hashed_password')";
+            $query = "INSERT INTO users (user_id, first_name, last_name, email, phone, role, password) VALUES ('$user_id','$firstname', '$lastname', '$email', '$phone', '$role', '$hashed_password')";
             
             if (mysqli_query($conn, $query)) {
                 echo '<script>alert("Successfully registered.");</script>';

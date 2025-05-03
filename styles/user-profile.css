@@ -16,59 +16,12 @@ body {
     color: #333;
 }
 
-/* Header */
-header {
-    background-color: #4aafdb;
-    padding: 15px 30px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.logo {
-    display: flex;
-    align-items: center;
-    font-size: 24px;
-    font-weight: 800;
-    color: white;
-    text-decoration: none;
-}
-
-.logo-text {
-    display: flex;
-}
-
-.logo-cinema {
-    color: #1a2f38;
-}
-
-.logo img {
-    height: 30px;
-    margin-left: 5px;
-}
-
-nav {
-    display: flex;
-    gap: 30px;
-}
-
-nav a {
-    color: white;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 18px;
-}
-
-nav a:last-child {
-    font-weight: 600;
-    color: #ff3b3b;
-}
-
 /* Main Content */
 main {
     max-width: 1200px;
     margin: 0 auto;
     padding: 30px 20px;
+    min-height: 70vh;
 }
 
 /* Profile Page Styles */
@@ -254,49 +207,4 @@ main {
 .prev-btn, .next-btn {
     background-color: #bae1f2;
     font-weight: 600;
-}
-
-/* Footer */
-footer {
-    background-color: #4aafdb;
-    color: white;
-    padding: 30px 0;
-    margin-top: 40px;
-}
-
-.footer-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-}
-
-.footer-section {
-    flex: 1;
-    padding: 0 20px;
-}
-
-.footer-section h3 {
-    font-size: 18px;
-    margin-bottom: 15px;
-    font-weight: 700;
-}
-
-.footer-section ul {
-    list-style: none;
-}
-
-.footer-section ul li {
-    margin-bottom: 8px;
-}
-
-.footer-section ul li a {
-    color: white;
-    text-decoration: none;
-    font-size: 14px;
-}
-
-.footer-section p {
-    margin-bottom: 8px;
-    font-size: 14px;
 }

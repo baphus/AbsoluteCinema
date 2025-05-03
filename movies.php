@@ -227,10 +227,10 @@ if (!$result) {
           <div class="content-wrapper">
           <div class="management-header">
             <h2>Movie Management</h2>
-            <div>
-              <button id="add-movie-btn" class="btn">
+            <button id="add-movie-btn" class="btn">
                 <i class="fas fa-plus"></i> Add Movie
               </button>
+            <div>
               <form method="GET" action="movies.php" id="sort-form">
                 <label for="sort-by">Sort by:</label>
                 <select id="sort-by" name="sort-by" onchange="document.getElementById('sort-form').submit();">

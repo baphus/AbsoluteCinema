@@ -3,31 +3,24 @@ session_start();
 include("config.php");
 
 // Check if the user is logged in and has the "admin" role
-if (!isset($_SESSION['user_name']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     // Redirect to the login page if the user is not an admin
     header("Location: login.php");
     exit();
 }
 
-// Initialize sort variables
-$sortBy = isset($_GET['sort-by']) ? $_GET['sort-by'] : 'user_id'; // Default sort by ID
-
-// Build the query based on the sort option
-$getUsersQuery = "SELECT * FROM users";
-if (!empty($sortBy)) {
-    $allowedSortColumns = ['user_id', 'first_name', 'last_name', 'email', 'phone', 'role', 'created_at'];
-    if (in_array($sortBy, $allowedSortColumns)) {
-        $getUsersQuery .= " ORDER BY $sortBy ASC";
-    }
+// Verify database connection
+if (!$conn) {
+    die("Database connection failed: " . mysqli_connect_error());
 }
 
+// Fetch all users from the database
+$getUsersQuery = "SELECT * FROM users";
 $result = mysqli_query($conn, $getUsersQuery);
 
 if (!$result) {
     die("Query failed: " . mysqli_error($conn));
-} else {
-    echo "Query executed successfully. Rows returned: " . mysqli_num_rows($result);
-}
+} 
 
 ?>
 
@@ -39,11 +32,6 @@ if (!$result) {
     <title>Admin Dashboard - Users</title>
     <link rel="stylesheet" href="/styles/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script>
-        function sortUsers() {
-            document.getElementById("sort-form").submit();
-        }
-    </script>
 </head>
 <body>
     <?php include("header.php") ?>
@@ -53,20 +41,6 @@ if (!$result) {
             <div class="content-wrapper">
                 <div class="management-header">
                     <h2>User Management</h2>
-                    <div>
-                        <form method="GET" action="users.php" id="sort-form">
-                            <label for="sort-by">Sort by:</label>
-                            <select id="sort-by" name="sort-by" onchange="sortUsers()">
-                                <option value="user_id" <?php echo $sortBy === 'user_id' ? 'selected' : ''; ?>>By ID</option>
-                                <option value="first_name" <?php echo $sortBy === 'first_name' ? 'selected' : ''; ?>>By First Name</option>
-                                <option value="last_name" <?php echo $sortBy === 'last_name' ? 'selected' : ''; ?>>By Last Name</option>
-                                <option value="email" <?php echo $sortBy === 'email' ? 'selected' : ''; ?>>By Email</option>
-                                <option value="phone" <?php echo $sortBy === 'phone' ? 'selected' : ''; ?>>By Phone</option>
-                                <option value="role" <?php echo $sortBy === 'role' ? 'selected' : ''; ?>>By Role</option>
-                                <option value="created_at" <?php echo $sortBy === 'created_at' ? 'selected' : ''; ?>>By Created At</option>
-                            </select>
-                        </form>
-                    </div>
                 </div>
 
                 <div class="table">
@@ -86,7 +60,6 @@ if (!$result) {
                         <tbody>
                             <?php if (mysqli_num_rows($result) > 0): ?>
                                 <?php while ($user = mysqli_fetch_assoc($result)): ?>
-                                    <?php echo "<pre>"; print_r($user); echo "</pre>"; ?>
                                     <tr>
                                         <td><?php echo htmlspecialchars($user['user_id']); ?></td>
                                         <td><?php echo htmlspecialchars($user['first_name']); ?></td>
@@ -107,7 +80,7 @@ if (!$result) {
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="8">No users found.</td>
+                                    <td colspan="8">No users found in the database.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>

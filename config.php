@@ -1,6 +1,6 @@
 <?php
 $host = 'localhost'; // Database host
-$dbname = 'movieticketbookingsystem'; // Database name
+$dbname = 'absolute_cinema_db'; // Database name
 $username = 'root'; // Database username
 $password = ''; // Database password (leave empty for default XAMPP setup)
 
