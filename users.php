@@ -1,8 +1,8 @@
 <?php
+session_start();
 include("config.php");
 
 // Check if the user is logged in and has the "admin" role
-session_start();
 if (!isset($_SESSION['user_name']) || $_SESSION['role'] !== 'admin') {
     // Redirect to the login page if the user is not an admin
     header("Location: login.php");
