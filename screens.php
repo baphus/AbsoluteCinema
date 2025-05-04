@@ -17,35 +17,70 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_screen'])) {
     $status = $_POST['status'];
     $notes = $_POST['notes'];
 
-    $insertQuery = "INSERT INTO screens (screen_name, capacity, screen_type, audio_system, status, notes) 
-                    VALUES (?, ?, ?, ?, ?, ?)";
-    $stmt = mysqli_prepare($conn, $insertQuery);
-    mysqli_stmt_bind_param($stmt, "sissss", $screen_name, $capacity, $screen_type, $audio_system, $status, $notes);
+    // Start transaction
+    mysqli_begin_transaction($conn);
 
-    if (mysqli_stmt_execute($stmt)) {
-        $screen_id = mysqli_insert_id($conn); // Get the ID of the newly created screen
-    
-        // Automatically create 9 seats for the new screen
-        $rows = ['A', 'B', 'C']; // Example row labels
-    
-        foreach ($rows as $row_label) {
-            for ($i = 1; $i <= 3; $i++) { // Create 3 seats per row
-                // Generate a unique seat_id using screen_id, row, and seat number
-                $seat_id = "SEAT_{$screen_id}_{$row_label}_{$i}";
-                $seatQuery = "INSERT INTO seats (seat_id, screen_id, row_label, seat_number, status) VALUES (?, ?, ?, ?, 'available')";
-                $seatStmt = mysqli_prepare($conn, $seatQuery);
-                mysqli_stmt_bind_param($seatStmt, "sisi", $seat_id, $screen_id, $row_label, $i);
-                mysqli_stmt_execute($seatStmt);
-                mysqli_stmt_close($seatStmt);
+    try {
+        $insertQuery = "INSERT INTO screens (screen_name, capacity, screen_type, audio_system, status, notes) 
+                        VALUES (?, ?, ?, ?, ?, ?)";
+        $stmt = mysqli_prepare($conn, $insertQuery);
+        mysqli_stmt_bind_param($stmt, "sissss", $screen_name, $capacity, $screen_type, $audio_system, $status, $notes);
+
+        if (mysqli_stmt_execute($stmt)) {
+            $screen_id = mysqli_insert_id($conn);
+            
+            // Calculate rows and seats per row based on capacity
+            $seats_per_row = 10; // Default seats per row
+            $num_rows = ceil($capacity / $seats_per_row);
+            
+            // Array of row labels (A-Z)
+            $row_labels = range('A', 'Z');
+            $seats_created = 0;
+            
+            // Create seats for each row
+            for ($row = 0; $row < $num_rows && $seats_created < $capacity; $row++) {
+                if ($row >= count($row_labels)) {
+                    throw new Exception("Too many rows needed for capacity. Maximum rows: " . count($row_labels));
+                }
+                
+                $row_label = $row_labels[$row];
+                $seats_this_row = min($seats_per_row, $capacity - $seats_created);
+                
+                // Create seats for this row
+                for ($seat_num = 1; $seat_num <= $seats_this_row; $seat_num++) {
+                    $seat_id = sprintf("SEAT_%04d_%s_%02d", $screen_id, $row_label, $seat_num);
+                    $seatQuery = "INSERT INTO seats (seat_id, screen_id, row_label, seat_number, status) 
+                                 VALUES (?, ?, ?, ?, 'available')";
+                    $seatStmt = mysqli_prepare($conn, $seatQuery);
+                    
+                    if (!$seatStmt) {
+                        throw new Exception("Failed to prepare seat insert statement: " . mysqli_error($conn));
+                    }
+                    
+                    mysqli_stmt_bind_param($seatStmt, "sisi", $seat_id, $screen_id, $row_label, $seat_num);
+                    
+                    if (!mysqli_stmt_execute($seatStmt)) {
+                        throw new Exception("Failed to insert seat: " . mysqli_stmt_error($seatStmt));
+                    }
+                    
+                    mysqli_stmt_close($seatStmt);
+                    $seats_created++;
+                }
             }
+            
+            mysqli_commit($conn);
+            $success_message = "Screen and " . $seats_created . " seats added successfully!";
+        } else {
+            throw new Exception("Failed to insert screen: " . mysqli_stmt_error($stmt));
         }
-    
-        $success_message = "Screen and its 9 seats added successfully!";
-    } else {
-        $error_message = "Error adding screen: " . mysqli_error($conn);
+    } catch (Exception $e) {
+        mysqli_rollback($conn);
+        $error_message = "Error: " . $e->getMessage();
+    } finally {
+        if (isset($stmt)) {
+            mysqli_stmt_close($stmt);
+        }
     }
-
-    mysqli_stmt_close($stmt);
 }
 
 // Process form submission for updating screens
