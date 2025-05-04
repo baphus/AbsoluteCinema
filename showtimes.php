@@ -65,6 +65,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_showtime'])) {
 $getShowtimesQuery = "SELECT * FROM showtimes ORDER BY showtime_id ASC";
 $result = mysqli_query($conn, $getShowtimesQuery);
 
+$showtimes = [];
+while ($showtime = mysqli_fetch_assoc($result)) {
+    $showtimes[] = $showtime; 
+}
+
 if (!$result) {
     die("Query failed: " . mysqli_error($conn));
 }
@@ -156,8 +161,8 @@ if (!$result) {
                             </tr>
                         </thead>
                         <tbody>
-                        <?php if (mysqli_num_rows($result) > 0 ): ?>
-                            <?php while ($showtime = mysqli_fetch_assoc($result)): ?>
+                        <?php if (count($showtimes) > 0 ): ?>
+                            <?php foreach ($showtimes as $showtime): ?>
                                 <tr>
                                     <td><?php echo htmlspecialchars($showtime['showtime_id']); ?></td>
                                     <td><?php echo htmlspecialchars($showtime['movie_title']); ?></td>
@@ -175,7 +180,7 @@ if (!$result) {
                                         </button>
                                     </td>
                                 </tr>
-                            <?php endwhile; ?>
+                            <?php endforeach; ?>
                             <?php else: ?>
                                 <tr> <td colspan="8" style="text-align: center;"> No showtimes found. </tr>
                             <?php endif ?>

@@ -9,19 +9,19 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
-// Verify database connection
-if (!$conn) {
-    die("Database connection failed: " . mysqli_connect_error());
-}
-
 // Fetch all users from the database
 $getUsersQuery = "SELECT * FROM users";
 $result = mysqli_query($conn, $getUsersQuery);
 
 if (!$result) {
     die("Query failed: " . mysqli_error($conn));
-} 
+}
 
+// Store the fetched rows in an array
+$users = [];
+while ($user = mysqli_fetch_assoc($result)) {
+    $users[] = $user;
+}
 ?>
 
 <!DOCTYPE html>
@@ -40,7 +40,7 @@ if (!$result) {
         <main class="main-content">
             <div class="content-wrapper">
                 <div class="management-header">
-                    <h2>User Management</h2>
+                    <h2> User Management </h2>
                 </div>
 
                 <div class="table">
@@ -58,8 +58,8 @@ if (!$result) {
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (mysqli_num_rows($result) > 0): ?>
-                                <?php while ($user = mysqli_fetch_assoc($result)): ?>
+                            <?php if (count($users) > 0): ?>
+                                <?php foreach ($users as $user): ?>
                                     <tr>
                                         <td><?php echo htmlspecialchars($user['user_id']); ?></td>
                                         <td><?php echo htmlspecialchars($user['first_name']); ?></td>
@@ -77,7 +77,7 @@ if (!$result) {
                                             </button>
                                         </td>
                                     </tr>
-                                <?php endwhile; ?>
+                                <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
                                     <td colspan="8">No users found in the database.</td>
@@ -89,5 +89,12 @@ if (!$result) {
             </div>
         </main>
     </div>
+    <script>
+        <?php if (count($users) > 0): ?>
+            <?php foreach ($users as $user): ?>
+                console.log("User ID: <?php echo htmlspecialchars($user['user_id']); ?>");
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </script>
 </body>
 </html>

@@ -156,6 +156,12 @@ if (!empty($sortBy)) {
 
 $result = mysqli_query($conn, $getMoviesQuery);
 
+//store movies in an array
+$movies = [];
+while ($movie = mysqli_fetch_assoc($result)) {
+    $movies[] = $movie;
+}
+
 if (!$result) {
     die("Query failed: " . mysqli_error($conn));
 }
@@ -269,8 +275,8 @@ if (!$result) {
                 </tr>
               </thead>
               <tbody>
-                <?php if (mysqli_num_rows($result) > 0): ?>
-                    <?php while ($movie = mysqli_fetch_assoc($result)): ?>
+                <?php if (count($movies) > 0): ?>
+                    <?php foreach ($movies as $movie) : ?>
                         <tr>
                             <td><?php echo htmlspecialchars($movie['movie_id']); ?></td>
                             <td><?php echo htmlspecialchars($movie['title']); ?></td>
@@ -293,7 +299,7 @@ if (!$result) {
                                 </button>
                             </td>
                         </tr>
-                    <?php endwhile; ?>
+                    <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
                         <td colspan="13">No movies found.</td>

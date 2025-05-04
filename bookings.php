@@ -57,6 +57,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_booking'])) {
 $getBookingsQuery = "SELECT * FROM bookings ORDER BY booking_id ASC";
 $result = mysqli_query($conn, $getBookingsQuery);
 
+$bookings = [];
+while ($booking = mysqli_fetch_assoc($result)) {
+    $bookings[] = $booking;
+}
 if (!$result) {
     die("Query failed: " . mysqli_error($conn));
 }
@@ -125,8 +129,8 @@ if (!$result) {
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (mysqli_num_rows($result) > 0): ?>
-                                <?php while ($booking = mysqli_fetch_assoc($result)): ?>
+                            <?php if (count($bookings) > 0): ?>
+                                <?php foreach ($bookings as $booking): ?>
                                     <tr>
                                         <td><?php echo htmlspecialchars($booking['booking_id']); ?></td>
                                         <td><?php echo htmlspecialchars($booking['user_id']); ?></td>
@@ -143,7 +147,7 @@ if (!$result) {
                                             </button>
                                         </td>
                                     </tr>
-                                <?php endwhile; ?>
+                                <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
                                     <td colspan="7" style="text-align: center;">No bookings found in the database.</td>

@@ -74,6 +74,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_screen'])) {
 $getScreensQuery = "SELECT * FROM screens ORDER BY screen_id ASC";
 $result = mysqli_query($conn, $getScreensQuery);
 
+$screens = [];
+    while($screen = mysqli_fetch_assoc($result) > 0 ){
+        $screens[] = $screen;
+    }
+
 if (!$result) {
     die("Query failed: " . mysqli_error($conn));
 }
@@ -165,8 +170,8 @@ if (!$result) {
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (mysqli_num_rows($result) > 0): ?>
-                                <?php while ($screen = mysqli_fetch_assoc($result)): ?>
+                            <?php if (count($screens) > 0): ?>
+                                <?php foreach ($screens as $screen) : ?>
                                     <tr>
                                         <td><?php echo htmlspecialchars($screen['screen_id']); ?></td>
                                         <td><?php echo htmlspecialchars($screen['screen_name']); ?></td>
@@ -184,7 +189,7 @@ if (!$result) {
                                             </button>
                                         </td>
                                     </tr>
-                                <?php endwhile; ?>
+                                <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
                                     <td colspan="8" style="text-align: center;">No screens found in the database.</td>

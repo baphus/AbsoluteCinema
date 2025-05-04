@@ -33,6 +33,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_seating'])) {
 $getSeatingsQuery = "SELECT * FROM seats ORDER BY seat_id ASC";
 $result = mysqli_query($conn, $getSeatingsQuery);
 
+$seatings = [];
+while ($seating = mysqli_fetch_assoc($result)) {
+    $seatings[] = $seating;
+}
 if (!$result) {
     die("Query failed: " . mysqli_error($conn));
 }
@@ -98,8 +102,8 @@ if (!$result) {
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (mysqli_num_rows($result) > 0): ?>
-                                <?php while ($seating = mysqli_fetch_assoc($result)): ?>
+                            <?php if (count($seatings) > 0): ?>
+                                <?php foreach ($seatings as $seating): ?>
                                     <tr>
                                         <td><?php echo htmlspecialchars($seating['seat_id']); ?></td>
                                         <td><?php echo htmlspecialchars($seating['screen_id']); ?></td>
@@ -115,7 +119,7 @@ if (!$result) {
                                             </button>
                                         </td>
                                     </tr>
-                                <?php endwhile; ?>
+                                <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
                                     <td colspan="6" style="text-align: center;">No seatings found in the database.</td>
