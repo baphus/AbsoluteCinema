@@ -91,8 +91,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_user'])) {
     <div class="dashboard-layout">
         <?php include("sidebar.php") ?>
         <main class="main-content">
+               
         <?php if (isset($_SESSION['success_message'])): ?>
-    <div class="alert alert-success">
+            <div class="alert alert-success">
         <?php echo htmlspecialchars($_SESSION['success_message']); ?>
         <?php unset($_SESSION['success_message']); ?>
             </div>
@@ -104,6 +105,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_user'])) {
                 <?php unset($_SESSION['error_message']); ?>
             </div>
         <?php endif; ?>
+
             <div class="content-wrapper">
                 <div class="management-header">
                     <h2> User Management </h2>

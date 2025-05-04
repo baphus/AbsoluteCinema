@@ -114,15 +114,21 @@ if (!$result) {
         <?php include("sidebar.php") ?>
 
         <main class="main-content">
+                   
         <?php if (isset($_SESSION['success_message'])): ?>
-            <p><?php echo htmlspecialchars($_SESSION['success_message']); ?></p>
-            <?php unset($_SESSION['success_message']); ?>
+            <div class="alert alert-success">
+        <?php echo htmlspecialchars($_SESSION['success_message']); ?>
+        <?php unset($_SESSION['success_message']); ?>
+            </div>
         <?php endif; ?>
 
         <?php if (isset($_SESSION['error_message'])): ?>
-            <p><?php echo htmlspecialchars($_SESSION['error_message']); ?></p>
-            <?php unset($_SESSION['error_message']); ?>
+            <div class="alert alert-danger">
+                <?php echo htmlspecialchars($_SESSION['error_message']); ?>
+                <?php unset($_SESSION['error_message']); ?>
+            </div>
         <?php endif; ?>
+
             <div class="content-wrapper">
                 <div class="management-header">
                     <h2>Booking Management</h2>

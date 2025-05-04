@@ -51,7 +51,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_screen'])) {
         $seats_per_row = 10;
         $num_rows = ceil($capacity / $seats_per_row);
         $row_labels = array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 
-                          'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z');
+                            'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z');
         $seats_created = 0;
 
         for ($row = 0; $row < $num_rows && $seats_created < $capacity; $row++) {
@@ -65,14 +65,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_screen'])) {
             for ($seat_num = 1; $seat_num <= $seats_this_row; $seat_num++) {
                 $seat_id = sprintf("SEAT_%s_%s_%02d", $screen_id, $row_label, $seat_num);
                 $seatQuery = "INSERT INTO seats (seat_id, screen_id, row_label, seat_number, status) 
-                             VALUES (?, ?, ?, ?, 'active')";
+                              VALUES (?, ?, ?, ?, 'available')";
                 $seatStmt = mysqli_prepare($conn, $seatQuery);
 
                 if (!$seatStmt) {
                     throw new Exception("Failed to prepare seat insert statement: " . mysqli_error($conn));
                 }
 
-                // Explicitly bind row_label as a single character
                 mysqli_stmt_bind_param($seatStmt, "sssi", 
                     $seat_id, 
                     $screen_id, 
@@ -189,15 +188,21 @@ if (!$result) {
     <div class="dashboard-layout">
         <?php include("sidebar.php") ?>
         <main class="main-content">
+                      
         <?php if (isset($_SESSION['success_message'])): ?>
-            <p><?php echo htmlspecialchars($_SESSION['success_message']); ?></p>
-            <?php unset($_SESSION['success_message']); ?>
+            <div class="alert alert-success">
+        <?php echo htmlspecialchars($_SESSION['success_message']); ?>
+        <?php unset($_SESSION['success_message']); ?>
+            </div>
         <?php endif; ?>
 
         <?php if (isset($_SESSION['error_message'])): ?>
-            <p><?php echo htmlspecialchars($_SESSION['error_message']); ?></p>
-            <?php unset($_SESSION['error_message']); ?>
+            <div class="alert alert-danger">
+                <?php echo htmlspecialchars($_SESSION['error_message']); ?>
+                <?php unset($_SESSION['error_message']); ?>
+            </div>
         <?php endif; ?>
+
             <div class="content-wrapper">
                 <div class="management-header">
                     <h2>Screen Management</h2>
