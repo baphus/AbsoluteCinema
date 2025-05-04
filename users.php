@@ -89,12 +89,5 @@ while ($user = mysqli_fetch_assoc($result)) {
             </div>
         </main>
     </div>
-    <script>
-        <?php if (count($users) > 0): ?>
-            <?php foreach ($users as $user): ?>
-                console.log("User ID: <?php echo htmlspecialchars($user['user_id']); ?>");
-            <?php endforeach; ?>
-        <?php endif; ?>
-    </script>
 </body>
 </html>

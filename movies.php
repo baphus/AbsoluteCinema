@@ -12,6 +12,7 @@ if (!isset($_SESSION['user_name']) || $_SESSION['role'] !== 'admin') {
 
 // Process form submission for adding new movies
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_movie'])) {
+    $movie_id = uniqid("MOVIE#");
     $title = $_POST['title'];
     $genre = $_POST['genre'];
     $duration = $_POST['duration'];
@@ -53,12 +54,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_movie'])) {
     }
 
     // Insert movie into database
-    $insertQuery = "INSERT INTO movies (title, genre, duration, rating, description, director, release_date, date_added, status, poster, banner) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $insertQuery = "INSERT INTO movies (movie_id, title, genre, duration, rating, description, director, release_date, date_added, status, poster, banner) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     $stmt = mysqli_prepare($conn, $insertQuery);
     mysqli_stmt_bind_param($stmt, "ssissssssss", 
-                           $title, $genre, $duration, $rating, $description, 
+                           $movie_id, $title, $genre, $duration, $rating, $description, 
                            $director, $release_date, $date_added, $status, $poster, $banner);
 
     if (mysqli_stmt_execute($stmt)) {
@@ -70,76 +71,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_movie'])) {
     mysqli_stmt_close($stmt);
 }
 
-// Process form submission for updating movies
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_movie'])) {
-    $movie_id = $_POST['movie_id'];
-    $title = $_POST['title'];
-    $genre = $_POST['genre'];
-    $duration = $_POST['duration'];
-    $rating = $_POST['rating'];
-    $description = $_POST['description'];
-    $director = $_POST['director'];
-    $release_date = $_POST['release_date'];
-    $status = $_POST['status'];
+//Delete movie form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_movie'])) {
+  $movie_id = $_POST['movie_id'];
 
-    // Handle poster and banner file uploads if new files are uploaded
-    $poster = $_POST['current_poster']; // Default to current poster
-    $banner = $_POST['current_banner']; // Default to current banner
+  $deleteQuery = "DELETE FROM movies WHERE movie_id = ?";
+  $stmt = mysqli_prepare($conn, $deleteQuery);
+  mysqli_stmt_bind_param($stmt, "s", $movie_id);
 
-    // Check if new poster is uploaded
-    if (isset($_FILES['poster']) && $_FILES['poster']['size'] > 0) {
-        $target_dir = "uploads/posters/";
-        if (!file_exists($target_dir)) {
-            mkdir($target_dir, 0777, true);
-        }
-        $file_extension = pathinfo($_FILES["poster"]["name"], PATHINFO_EXTENSION);
-        $poster_file = $target_dir . "poster_" . $movie_id . "_" . time() . "." . $file_extension;
+  if (mysqli_stmt_execute($stmt)) {
+      $success_message = "Movie deleted successfully!";
+  } else {
+      $error_message = "Error deleting movie: " . mysqli_error($conn);
+  }
 
-        if (move_uploaded_file($_FILES["poster"]["tmp_name"], $poster_file)) {
-            $poster = $poster_file;
-        }
-    }
-
-    // Check if new banner is uploaded
-    if (isset($_FILES['banner']) && $_FILES['banner']['size'] > 0) {
-        $target_dir = "uploads/banners/";
-        if (!file_exists($target_dir)) {
-            mkdir($target_dir, 0777, true);
-        }
-        $file_extension = pathinfo($_FILES["banner"]["name"], PATHINFO_EXTENSION);
-        $banner_file = $target_dir . "banner_" . $movie_id . "_" . time() . "." . $file_extension;
-
-        if (move_uploaded_file($_FILES["banner"]["tmp_name"], $banner_file)) {
-            $banner = $banner_file;
-        }
-    }
-
-    // Update movie in database
-    $updateQuery = "UPDATE movies SET 
-                    title = ?, 
-                    genre = ?, 
-                    duration = ?, 
-                    rating = ?, 
-                    description = ?, 
-                    director = ?, 
-                    release_date = ?, 
-                    status = ?, 
-                    poster = ?, 
-                    banner = ? 
-                    WHERE movie_id = ?";  
-
-    $stmt = mysqli_prepare($conn, $updateQuery);
-    mysqli_stmt_bind_param($stmt, "ssisssssssi", 
-                           $title, $genre, $duration, $rating, $description, 
-                           $director, $release_date, $status, $poster, $banner, $movie_id);
-
-    if (mysqli_stmt_execute($stmt)) {
-        $success_message = "Movie updated successfully!";
-    } else {
-        $error_message = "Error updating movie: " . mysqli_error($conn);
-    }
-
-    mysqli_stmt_close($stmt);
+  mysqli_stmt_close($stmt);
 }
 
 // Initialize sort variables
@@ -156,7 +102,7 @@ if (!empty($sortBy)) {
 
 $result = mysqli_query($conn, $getMoviesQuery);
 
-//store movies in an array
+// Store movies in an array
 $movies = [];
 while ($movie = mysqli_fetch_assoc($result)) {
     $movies[] = $movie;
@@ -182,45 +128,42 @@ if (!$result) {
         const addModalCloseBtn = document.querySelector('#addModal .close-btn');
 
         addMovieBtn.addEventListener('click', function () {
-          addModal.style.display = 'block';
+            addModal.style.display = 'block';
         });
 
         addModalCloseBtn.addEventListener('click', function () {
-          addModal.style.display = 'none';
+            addModal.style.display = 'none';
         });
 
         window.addEventListener('click', function (event) {
-          if (event.target == addModal) {
-            addModal.style.display = 'none';
-          }
+            if (event.target == addModal) {
+                addModal.style.display = 'none';
+            }
         });
+      });
 
-        const editModal = document.getElementById('editModal');
-        const editModalCloseBtn = document.querySelector('#editModal .close-btn');
+      document.addEventListener('DOMContentLoaded', function () {
+        const deleteModal = document.getElementById('deleteModal');
+        const deleteModalCloseBtns = document.querySelectorAll('#deleteModal .close-btn');
 
-        window.openEditModal = function (movieId, title, genre, duration, rating, description, director, releaseDate, status, poster, banner) {
-          document.getElementById('edit_movie_id').value = movieId;
-          document.getElementById('edit_title').value = title;
-          document.getElementById('edit_genre').value = genre;
-          document.getElementById('edit_duration').value = duration;
-          document.getElementById('edit_rating').value = rating;
-          document.getElementById('edit_description').value = description;
-          document.getElementById('edit_director').value = director;
-          document.getElementById('edit_release_date').value = releaseDate;
-          document.getElementById('edit_status').value = status;
-          document.getElementById('current_poster').value = poster;
-          document.getElementById('current_banner').value = banner;
-          editModal.style.display = 'block';
+        // Open the delete modal
+        window.openDeleteModal = function (movieId) {
+            document.getElementById('delete_movie_id').value = movieId;
+            deleteModal.style.display = 'block';
         };
 
-        editModalCloseBtn.addEventListener('click', function () {
-          editModal.style.display = 'none';
+        // Close the delete modal
+        deleteModalCloseBtns.forEach(btn => {
+            btn.addEventListener('click', function () {
+                deleteModal.style.display = 'none';
+            });
         });
 
+        // Close modal when clicking outside the modal content
         window.addEventListener('click', function (event) {
-          if (event.target == editModal) {
-            editModal.style.display = 'none';
-          }
+            if (event.target == deleteModal) {
+                deleteModal.style.display = 'none';
+            }
         });
       });
     </script>
@@ -291,10 +234,7 @@ if (!$result) {
                             <td><img src="<?php echo htmlspecialchars($movie['poster']); ?>" alt="Poster" style="width: 50px;"></td>
                             <td><img src="<?php echo htmlspecialchars($movie['banner']); ?>" alt="Banner" style="width: 100px;"></td>
                             <td class="actions">
-                                <button class="btn-icon btn-edit" onclick="openEditModal('<?php echo $movie['movie_id']; ?>', '<?php echo $movie['title']; ?>', '<?php echo $movie['genre']; ?>', '<?php echo $movie['duration']; ?>', '<?php echo $movie['rating']; ?>', '<?php echo $movie['description']; ?>', '<?php echo $movie['director']; ?>', '<?php echo $movie['release_date']; ?>', '<?php echo $movie['status']; ?>', '<?php echo $movie['poster']; ?>', '<?php echo $movie['banner']; ?>')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn-icon btn-delete">
+                                <button class="btn-icon btn-delete" onclick="openDeleteModal('<?php echo htmlspecialchars($movie['movie_id']); ?>')">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </td>
@@ -311,6 +251,6 @@ if (!$result) {
         </div>  
       </main>
     </div>
-    <?php include("edit-movie-modal.html") ?>
   </body>
+  <?php include("modals.html")?>
 </html>
