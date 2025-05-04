@@ -14,16 +14,34 @@ if (!isset($_SESSION['user_id'])) {
 
 // Check if movie_id is provided in the URL
 if (isset($_GET['movie_id'])) {
-    $movie_id = intval($_GET['movie_id']); // Sanitize the input to prevent SQL injection
+    $movie_id = mysqli_real_escape_string($conn, $_GET['movie_id']);
 
-    // Fetch the movie details from the database
-    $getMovieQuery = "SELECT * FROM movies WHERE movie_id = $movie_id";
-    $result = mysqli_query($conn, $getMovieQuery);
+    // Fetch the movie details
+    $movieQuery = "SELECT * FROM movies WHERE movie_id = ?";
+    $stmt = mysqli_prepare($conn, $movieQuery);
+    mysqli_stmt_bind_param($stmt, "s", $movie_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
 
     if ($result && mysqli_num_rows($result) > 0) {
         $movie = mysqli_fetch_assoc($result);
+        
+        // Fetch available showtimes for this movie
+        $showtimeQuery = "SELECT s.*, scr.screen_name, scr.screen_id 
+                         FROM showtimes s 
+                         JOIN screens scr ON s.screen = scr.screen_name 
+                         WHERE s.movie_title = ? AND s.status = 'Available' 
+                         AND s.date >= CURDATE() 
+                         ORDER BY s.date, s.time";
+        $stmt = mysqli_prepare($conn, $showtimeQuery);
+        mysqli_stmt_bind_param($stmt, "s", $movie['title']);
+        mysqli_stmt_execute($stmt);
+        $showtimeResult = mysqli_stmt_get_result($stmt);
+        $showtimes = [];
+        while ($row = mysqli_fetch_assoc($showtimeResult)) {
+            $showtimes[] = $row;
+        }
     } else {
-        // Redirect to a 404 page or show an error if the movie is not found
         header("Location: 404.php");
         exit;
     }
@@ -56,81 +74,40 @@ if (isset($_GET['movie_id'])) {
             <div class="left-column">
                 <div class="booking-section">
                     <h2>Select Date & Time</h2>
-                    <label class="date-label">Date</label>
-                    <div class="date-options">
-                        <button class="date-option">Apr 26</button>
-                        <button class="date-option">Apr 27</button>
-                        <button class="date-option">Apr 28</button>
-                        <button class="date-option">Apr 29</button>
-                        <button class="date-option">Apr 30</button>
-                    </div>
-
-                    <label class="time-label">Show Time</label>
-                    <div class="time-options">
-                        <button class="date-option">11:00 AM</button>
-                        <button class="date-option">2:30 PM</button>
-                        <button class="date-option">6:00 PM</button>
-                        <button class="date-option">9:30 PM</button>
+                    <label class="date-label">Available Showtimes</label>
+                    <div class="showtime-options">
+                        <?php foreach ($showtimes as $showtime): ?>
+                            <div class="showtime-option">
+                                <input type="radio" name="showtime" 
+                                       id="showtime_<?php echo $showtime['showtime_id']; ?>" 
+                                       value="<?php echo $showtime['showtime_id']; ?>"
+                                       data-screen="<?php echo htmlspecialchars($showtime['screen_name']); ?>"
+                                       data-price="<?php echo htmlspecialchars($showtime['price']); ?>">
+                                <label for="showtime_<?php echo $showtime['showtime_id']; ?>">
+                                    <?php 
+                                        echo date('M d', strtotime($showtime['date'])) . ' - ' . 
+                                             date('h:i A', strtotime($showtime['time'])) . ' - ' .
+                                             htmlspecialchars($showtime['screen_name']); 
+                                    ?>
+                                </label>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
 
                 <div class="booking-section">
-                    <h2>Select your seat</h2>
-                    <label class="tickets-label">Number of Tickets:</label>
-                    <select class="tickets-select" id="ticketCount">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                    </select>
-
-                    <label class="seats-label">Available seats</label>
-                    <select class="seat-dropdown" id="seatSelect">
-                        <option value="">-- Select a seat --</option>
-                        <option class="seat-section" disabled>A-section (Premium)</option>
-                        <option value="A1">A1</option>
-                        <option value="A2">A2</option>
-                        <option value="A3">A3</option>
-                        <option value="A4">A4</option>
-                        <option value="A5">A5</option>
-                        <option class="seat-section" disabled>B-section (Premium)</option>
-                        <option value="B1">B1</option>
-                        <option value="B2">B2</option>
-                        <option value="B3">B3</option>
-                        <option value="B4">B4</option>
-                        <option value="B5">B5</option>
-                        <option class="seat-section" disabled>C-section (Standard)</option>
-                        <option value="C1">C1</option>
-                        <option value="C2">C2</option>
-                        <option value="C3">C3</option>
-                        <option value="C4">C4</option>
-                        <option value="C5">C5</option>
-                        <option class="seat-section" disabled>D-section (Standard)</option>
-                        <option value="D1">D1</option>
-                        <option value="D2">D2</option>
-                        <option value="D3">D3</option>
-                        <option value="D4">D4</option>
-                        <option value="D5">D5</option>
-                        <option class="seat-section" disabled>E-section (Standard)</option>
-                        <option value="E1">E1</option>
-                        <option value="E2">E2</option>
-                        <option value="E3">E3</option>
-                        <option value="E4">E4</option>
-                        <option value="E5">E5</option>
-                    </select>
-
-                    <div id="selectedSeatsDisplay" class="screen">
-                        <div class="no-seats">No seats selected</div>
-                    </div>
-
-                    <div class="seat-info">
-                        <div class="seat-info-title">Seat Information:</div>
-                        <ul>
-                            <li>Rows A-B: Premium seats ($14 each)</li>
-                            <li>Rows C-E: Standard seats ($12 each)</li>
-                            <li>Some seats are unavailable as they have already been booked</li>
-                        </ul>
+                    <h2>Select your seats</h2>
+                    <div id="screen-selection" style="display: none;">
+                        <div class="screen-info">
+                            <p>Screen: <span id="selected-screen"></span></p>
+                            <p>Price per seat: ₱<span id="seat-price">0.00</span></p>
+                        </div>
+                        
+                        <div class="seat-selection">
+                            <div id="seat-map" class="seat-map">
+                                <!-- Seats will be loaded dynamically -->
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -187,6 +164,61 @@ if (isset($_GET['movie_id'])) {
         </div>
     </div>
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const showtimeOptions = document.querySelectorAll('input[name="showtime"]');
+            const screenSelection = document.getElementById('screen-selection');
+            const selectedScreen = document.getElementById('selected-screen');
+            const seatPrice = document.getElementById('seat-price');
+            const seatMap = document.getElementById('seat-map');
+
+            showtimeOptions.forEach(option => {
+                option.addEventListener('change', function() {
+                    selectedScreen.textContent = this.dataset.screen;
+                    seatPrice.textContent = parseFloat(this.dataset.price).toFixed(2);
+                    screenSelection.style.display = 'block';
+                    
+                    // Load seats for selected screen
+                    fetch(`get_seats.php?screen=${this.dataset.screen}`)
+                        .then(response => response.json())
+                        .then(seats => {
+                            displaySeats(seats);
+                        });
+                });
+            });
+
+            function displaySeats(seats) {
+                seatMap.innerHTML = '';
+                let currentRow = '';
+                let rowDiv;
+
+                seats.forEach(seat => {
+                    if (seat.row_label !== currentRow) {
+                        currentRow = seat.row_label;
+                        rowDiv = document.createElement('div');
+                        rowDiv.className = 'seat-row';
+                        rowDiv.innerHTML = `<div class="row-label">${currentRow}</div>`;
+                        seatMap.appendChild(rowDiv);
+                    }
+
+                    const seatButton = document.createElement('button');
+                    seatButton.className = `seat ${seat.status.toLowerCase()}`;
+                    seatButton.dataset.seatId = seat.seat_id;
+                    seatButton.textContent = seat.seat_number;
+                    
+                    if (seat.status === 'available') {
+                        seatButton.addEventListener('click', () => selectSeat(seatButton));
+                    }
+
+                    rowDiv.appendChild(seatButton);
+                });
+            }
+
+            function selectSeat(seatButton) {
+                seatButton.classList.toggle('selected');
+                updateBookingSummary();
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             const ticketCountSelect = document.getElementById('ticketCount');
             const seatSelect = document.getElementById('seatSelect');

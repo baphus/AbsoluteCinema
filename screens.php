@@ -76,7 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_screen'])) {
             for ($seat_num = 1; $seat_num <= $seats_this_row; $seat_num++) {
                 $seat_id = sprintf("SEAT_%s_%s_%02d", $screen_id, $row_label, $seat_num);
                 $seatQuery = "INSERT INTO seats (seat_id, screen_id, row_label, seat_number, status) 
-                             VALUES (?, ?, ?, ?, 'available')";
+                             VALUES (?, ?, ?, ?, 'active')";
                 $seatStmt = mysqli_prepare($conn, $seatQuery);
 
                 if (!$seatStmt) {
@@ -135,6 +135,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_screen'])) {
     }
 
     mysqli_stmt_close($stmt);
+}
+
+// Process form submission for deleting screens
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_screen'])) {
+    $screen_id = $_POST['screen_id'];
+
+    // Check if there are associated showtimes
+    $checkShowtimesQuery = "SELECT COUNT(*) AS count FROM showtimes WHERE screen_id = ?";
+    $stmt = mysqli_prepare($conn, $checkShowtimesQuery);
+    mysqli_stmt_bind_param($stmt, "s", $screen_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $row = mysqli_fetch_assoc($result);
+
+    if ($row['count'] > 0) {
+        $_SESSION['error_message'] = "Cannot delete screen. There are associated showtimes.";
+        header("Location: screens.php");
+        exit();
+    }
+
+    // Proceed with deletion if no associated showtimes
+    $deleteQuery = "DELETE FROM screens WHERE screen_id = ?";
+    $stmt = mysqli_prepare($conn, $deleteQuery);
+    mysqli_stmt_bind_param($stmt, "s", $screen_id);
+
+    if (mysqli_stmt_execute($stmt)) {
+        $_SESSION['success_message'] = "Screen deleted successfully!";
+    } else {
+        $_SESSION['error_message'] = "Error deleting screen: " . mysqli_error($conn);
+    }
+
+    mysqli_stmt_close($stmt);
+    header("Location: screens.php");
+    exit();
 }
 
 // Fetch all screens

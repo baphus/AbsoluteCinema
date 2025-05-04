@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $emailResult = mysqli_query($conn, $emailQuery);
 
     if (mysqli_num_rows($emailResult) > 0) {
-        echo '<script>alert("This email is already taken.");</script>';
+        echo "This email is already taken.";
     } else {
         // Check if passwords match
         if ($password === $confirmpassword) {
@@ -25,14 +25,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $query = "INSERT INTO users (user_id, first_name, last_name, email, phone, role, password) VALUES ('$user_id','$firstname', '$lastname', '$email', '$phone', '$role', '$hashed_password')";
             
             if (mysqli_query($conn, $query)) {
-                echo '<script>alert("Successfully registered.");</script>';
+                echo "Successfully registered.";
                 header("Location: login.php");
                 exit;
             } else {
-                echo '<script>alert("Error: Unable to register.");</script>';
+                echo "Error: Unable to register.";
             }
         } else {
-            echo '<script>alert("Passwords do not match.");</script>';
+            echo "Passwords do not match.";
         }
     }
 }

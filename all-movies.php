@@ -93,8 +93,8 @@ $totalPages = ceil($totalMovies / $moviesPerPage);
                                 <p class="movie-info"><?php echo htmlspecialchars($movie['genre']); ?> | <?php echo htmlspecialchars($movie['duration']); ?> mins | <?php echo htmlspecialchars($movie['rating']); ?></p>
                                 <p class="movie-description"><?php echo htmlspecialchars($movie['description']); ?></p>
                                 <div class="movie-actions">
-                                    <a href="movie.php?movie_id=<?php echo $movie['movie_id']?>" class="details-btn">Details</a>
-                                    <a href="booking.php?movie_id=<?php echo $movie['movie_id'] ?> " class="book-now-btn">Book</a>
+                                    <a href="movie.php?movie_id=<?php echo urlencode($movie['movie_id']); ?>" class="details-btn">Details</a>
+                                    <a href="booking.php?movie_id=<?php echo urlencode($movie['movie_id']); ?>" class="book-now-btn">Book</a>
                                 </div>
                             </div>
                         </div>

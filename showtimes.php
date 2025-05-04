@@ -10,17 +10,18 @@ if (!isset($_SESSION['user_name']) || $_SESSION['role'] !== 'admin') {
 
 // Process form submission for adding new showtimes
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_showtime'])) {
-    $movie_title = $_POST['movie_title'];
-    $screen = $_POST['screen'];
-    $date = $_POST['date'];
-    $time = $_POST['time'];
+    $showtime_id = uniqid("SHWTME_");
+    $movie_id = $_POST['movie_id'];
+    $screen_id = $_POST['screen_id'];
+    $show_date = $_POST['show_date'];
+    $start_time = $_POST['start_time'];
     $price = $_POST['price'];
     $status = $_POST['status'];
 
-    $insertQuery = "INSERT INTO showtimes (movie_title, screen, date, time, price, status) 
-                    VALUES (?, ?, ?, ?, ?, ?)";
+    $insertQuery = "INSERT INTO showtimes (showtime_id, movie_id, screen_id, show_date, start_time, price, status) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?)";
     $stmt = mysqli_prepare($conn, $insertQuery);
-    mysqli_stmt_bind_param($stmt, "ssssds", $movie_title, $screen, $date, $time, $price, $status);
+    mysqli_stmt_bind_param($stmt, "sssssss", $showtime_id, $movie_id, $screen_id, $show_date, $start_time, $price, $status);
 
     if (mysqli_stmt_execute($stmt)) {
         $success_message = "Showtime added successfully!";
@@ -34,23 +35,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_showtime'])) {
 // Process form submission for updating showtimes
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_showtime'])) {
     $showtime_id = $_POST['showtime_id'];
-    $movie_title = $_POST['movie_title'];
-    $screen = $_POST['screen'];
-    $date = $_POST['date'];
-    $time = $_POST['time'];
+    $movie_id = $_POST['movie_id'];
+    $screen_id = $_POST['screen_id'];
+    $show_date = $_POST['show_date'];
+    $start_time = $_POST['start_time'];
     $price = $_POST['price'];
     $status = $_POST['status'];
 
     $updateQuery = "UPDATE showtimes SET 
-                    movie_title = ?, 
-                    screen = ?, 
-                    date = ?, 
-                    time = ?, 
+                    movie_id = ?, 
+                    screen_id = ?, 
+                    show_date = ?, 
+                    start_time = ?, 
                     price = ?, 
                     status = ? 
                     WHERE showtime_id = ?";
     $stmt = mysqli_prepare($conn, $updateQuery);
-    mysqli_stmt_bind_param($stmt, "ssssdsi", $movie_title, $screen, $date, $time, $price, $status, $showtime_id);
+    mysqli_stmt_bind_param($stmt, "sssssss", $movie_id, $screen_id, $show_date, $start_time, $price, $status, $showtime_id);
 
     if (mysqli_stmt_execute($stmt)) {
         $success_message = "Showtime updated successfully!";
@@ -61,13 +62,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_showtime'])) {
     mysqli_stmt_close($stmt);
 }
 
-// Fetch all showtimes
-$getShowtimesQuery = "SELECT * FROM showtimes ORDER BY showtime_id ASC";
+// Fetch all showtimes with movie titles
+$getShowtimesQuery = "
+    SELECT s.showtime_id, m.title AS movie_title, scr.screen_name, s.show_date, s.start_time, s.price, s.status
+    FROM showtimes s
+    JOIN movies m ON s.movie_id = m.movie_id
+    JOIN screens scr ON s.screen_id = scr.screen_id
+    ORDER BY s.showtime_id ASC";
 $result = mysqli_query($conn, $getShowtimesQuery);
 
 $showtimes = [];
 while ($showtime = mysqli_fetch_assoc($result)) {
-    $showtimes[] = $showtime; 
+    $showtimes[] = $showtime;
 }
 
 if (!$result) {
@@ -75,7 +81,7 @@ if (!$result) {
 }
 
 // Fetch all movies
-$getMoviesQuery = "SELECT title FROM movies WHERE status = 'SHOWING' ORDER BY title ASC";
+$getMoviesQuery = "SELECT movie_id, title FROM movies WHERE status = 'SHOWING' ORDER BY title ASC";
 $moviesResult = mysqli_query($conn, $getMoviesQuery);
 $movies = [];
 while ($movie = mysqli_fetch_assoc($moviesResult)) {
@@ -83,7 +89,7 @@ while ($movie = mysqli_fetch_assoc($moviesResult)) {
 }
 
 // Fetch all screens
-$getScreensQuery = "SELECT screen_name FROM screens WHERE status = 'Active' ORDER BY screen_name ASC";
+$getScreensQuery = "SELECT screen_id, screen_name FROM screens WHERE status = 'active' ORDER BY screen_name ASC";
 $screensResult = mysqli_query($conn, $getScreensQuery);
 $screens = [];
 while ($screen = mysqli_fetch_assoc($screensResult)) {
@@ -125,12 +131,12 @@ while ($screen = mysqli_fetch_assoc($screensResult)) {
         const editModal = document.getElementById('editModal');
         const editModalCloseBtn = document.querySelector('#editModal .close-btn');
 
-        window.openEditModal = function (showtime_id, movie_title, screen, date, time, price, status) {
+        window.openEditModal = function (showtime_id, movie_id, screen_id, show_date, start_time, price, status) {
             document.getElementById('edit_showtime_id').value = showtime_id;
-            document.getElementById('edit_movie_title').value = movie_title; // This will select the correct option
-            document.getElementById('edit_screen').value = screen; // This will select the correct option
-            document.getElementById('edit_date').value = date;
-            document.getElementById('edit_time').value = time;
+            document.getElementById('edit_movie_id').value = movie_id; // This will select the correct option
+            document.getElementById('edit_screen_id').value = screen_id; // This will select the correct option
+            document.getElementById('edit_show_date').value = show_date;
+            document.getElementById('edit_start_time').value = start_time;
             document.getElementById('edit_price').value = price;
             document.getElementById('edit_status').value = status;
             editModal.style.display = 'block';
@@ -177,18 +183,18 @@ while ($screen = mysqli_fetch_assoc($screensResult)) {
                             </tr>
                         </thead>
                         <tbody>
-                        <?php if (count($showtimes) > 0 ): ?>
+                        <?php if (count($showtimes) > 0): ?>
                             <?php foreach ($showtimes as $showtime): ?>
                                 <tr>
                                     <td><?php echo htmlspecialchars($showtime['showtime_id']); ?></td>
-                                    <td><?php echo htmlspecialchars($showtime['movie_title']); ?></td>
-                                    <td><?php echo htmlspecialchars($showtime['screen']); ?></td>
-                                    <td><?php echo htmlspecialchars($showtime['date']); ?></td>
-                                    <td><?php echo htmlspecialchars($showtime['time']); ?></td>
+                                    <td><?php echo htmlspecialchars($showtime['movie_title']); ?></td> 
+                                    <td><?php echo htmlspecialchars($showtime['screen_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($showtime['show_date']); ?></td>
+                                    <td><?php echo htmlspecialchars($showtime['start_time']); ?></td>
                                     <td>₱<?php echo htmlspecialchars(number_format($showtime['price'], 2)); ?></td>
                                     <td><?php echo htmlspecialchars($showtime['status']); ?></td>
                                     <td class="actions">
-                                        <button class="btn-icon btn-edit" onclick="openEditModal('<?php echo $showtime['showtime_id']; ?>', '<?php echo $showtime['movie_title']; ?>', '<?php echo $showtime['screen']; ?>', '<?php echo $showtime['date']; ?>', '<?php echo $showtime['time']; ?>', '<?php echo $showtime['price']; ?>', '<?php echo $showtime['status']; ?>')">
+                                        <button class="btn-icon btn-edit" onclick="openEditModal('<?php echo $showtime['showtime_id']; ?>', '<?php echo $showtime['movie_title']; ?>', '<?php echo $showtime['screen_name']; ?>', '<?php echo $showtime['show_date']; ?>', '<?php echo $showtime['start_time']; ?>', '<?php echo $showtime['price']; ?>', '<?php echo $showtime['status']; ?>')">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         <button class="btn-icon btn-delete" onclick="if(confirm('Are you sure you want to delete this showtime?')) window.location.href='delete_showtime.php?id=<?php echo $showtime['showtime_id']; ?>';">
@@ -197,9 +203,9 @@ while ($screen = mysqli_fetch_assoc($screensResult)) {
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr> <td colspan="8" style="text-align: center;"> No showtimes found. </tr>
-                            <?php endif ?>
+                        <?php else: ?>
+                            <tr><td colspan="8" style="text-align: center;">No showtimes found.</td></tr>
+                        <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -216,34 +222,34 @@ while ($screen = mysqli_fetch_assoc($screensResult)) {
             </div>
             <form method="POST" action="showtimes.php">
                 <div class="form-group">
-                    <label for="movie_title">Movie Title</label>
-                    <select id="movie_title" name="movie_title" required>
+                    <label for="movie_id">Movie</label>
+                    <select id="movie_id" name="movie_id" required>
                         <option value="">Select a movie</option>
                         <?php foreach ($movies as $movie): ?>
-                            <option value="<?php echo htmlspecialchars($movie['title']); ?>">
+                            <option value="<?php echo htmlspecialchars($movie['movie_id']); ?>">
                                 <?php echo htmlspecialchars($movie['title']); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="screen">Screen</label>
-                    <select id="screen" name="screen" required>
+                    <label for="screen_id">Screen</label>
+                    <select id="screen_id" name="screen_id" required>
                         <option value="">Select a screen</option>
                         <?php foreach ($screens as $screen): ?>
-                            <option value="<?php echo htmlspecialchars($screen['screen_name']); ?>">
+                            <option value="<?php echo htmlspecialchars($screen['screen_id']); ?>">
                                 <?php echo htmlspecialchars($screen['screen_name']); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="date">Date</label>
-                    <input type="date" id="date" name="date" required>
+                    <label for="show_date">Date</label>
+                    <input type="date" id="show_date" name="show_date" required>
                 </div>
                 <div class="form-group">
-                    <label for="time">Time</label>
-                    <input type="time" id="time" name="time" required>
+                    <label for="start_time">Time</label>
+                    <input type="time" id="start_time" name="start_time" required>
                 </div>
                 <div class="form-group">
                     <label for="price">Price</label>
@@ -252,8 +258,8 @@ while ($screen = mysqli_fetch_assoc($screensResult)) {
                 <div class="form-group">
                     <label for="status">Status</label>
                     <select id="status" name="status" required>
-                        <option value="Available">Available</option>
-                        <option value="Unavailable">Unavailable</option>
+                        <option value="available">Available</option>
+                        <option value="inactive">Inactive</option>
                     </select>
                 </div>
                 <div class="form-actions">
@@ -273,34 +279,34 @@ while ($screen = mysqli_fetch_assoc($screensResult)) {
             <form method="POST" action="showtimes.php">
                 <input type="hidden" id="edit_showtime_id" name="showtime_id">
                 <div class="form-group">
-                    <label for="edit_movie_title">Movie Title</label>
-                    <select id="edit_movie_title" name="movie_title" required>
+                    <label for="edit_movie_id">Movie</label>
+                    <select id="edit_movie_id" name="movie_id" required>
                         <option value="">Select a movie</option>
                         <?php foreach ($movies as $movie): ?>
-                            <option value="<?php echo htmlspecialchars($movie['title']); ?>">
+                            <option value="<?php echo htmlspecialchars($movie['movie_id']); ?>">
                                 <?php echo htmlspecialchars($movie['title']); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="edit_screen">Screen</label>
-                    <select id="edit_screen" name="screen" required>
+                    <label for="edit_screen_id">Screen</label>
+                    <select id="edit_screen_id" name="screen_id" required>
                         <option value="">Select a screen</option>
                         <?php foreach ($screens as $screen): ?>
-                            <option value="<?php echo htmlspecialchars($screen['screen_name']); ?>">
+                            <option value="<?php echo htmlspecialchars($screen['screen_id']); ?>">
                                 <?php echo htmlspecialchars($screen['screen_name']); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="edit_date">Date</label>
-                    <input type="date" id="edit_date" name="date" required>
+                    <label for="edit_show_date">Date</label>
+                    <input type="date" id="edit_show_date" name="show_date" required>
                 </div>
                 <div class="form-group">
-                    <label for="edit_time">Time</label>
-                    <input type="time" id="edit_time" name="time" required>
+                    <label for="edit_start_time">Time</label>
+                    <input type="time" id="edit_start_time" name="start_time" required>
                 </div>
                 <div class="form-group">
                     <label for="edit_price">Price</label>
@@ -309,8 +315,8 @@ while ($screen = mysqli_fetch_assoc($screensResult)) {
                 <div class="form-group">
                     <label for="edit_status">Status</label>
                     <select id="edit_status" name="status" required>
-                        <option value="Available">Available</option>
-                        <option value="Unavailable">Unavailable</option>
+                        <option value="available">Available</option>
+                        <option value="inactive">Inactive</option>
                     </select>
                 </div>
                 <div class="form-actions">

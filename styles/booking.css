@@ -361,3 +361,50 @@ nav a:last-child {
 font-style: italic;
 color: #777;
 }
+
+.seat-map {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.seat-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.row-label {
+    width: 30px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.seat {
+    width: 35px;
+    height: 35px;
+    border: 1px solid #ccc;
+    background: #fff;
+    cursor: pointer;
+}
+
+.seat.available:hover {
+    background: #e3f2fd;
+}
+
+.seat.selected {
+    background: #2196f3;
+    color: white;
+}
+
+.seat.occupied {
+    background: #f44336;
+    color: white;
+    cursor: not-allowed;
+}
+
+.seat.maintenance {
+    background: #ffc107;
+    cursor: not-allowed;
+}
