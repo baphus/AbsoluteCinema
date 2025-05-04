@@ -22,6 +22,59 @@ $users = [];
 while ($user = mysqli_fetch_assoc($result)) {
     $users[] = $user;
 }
+
+// Handle user update
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_user'])) {
+    $user_id = $_POST['user_id'];
+    $first_name = $_POST['first_name'];
+    $last_name = $_POST['last_name'];
+    $email = $_POST['email'];
+    $phone = $_POST['phone'];
+    $role = $_POST['role'];
+
+    $updateQuery = "UPDATE users SET 
+                    first_name = ?, 
+                    last_name = ?, 
+                    email = ?, 
+                    phone = ?, 
+                    role = ? 
+                    WHERE user_id = ?";
+    $stmt = mysqli_prepare($conn, $updateQuery);
+    mysqli_stmt_bind_param($stmt, "ssssss", $first_name, $last_name, $email, $phone, $role, $user_id);
+
+    if (mysqli_stmt_execute($stmt)) {
+        $_SESSION['success_message'] = "User updated successfully!";
+    } else {
+        $_SESSION['error_message'] = "Error updating user: " . mysqli_error($conn);
+    }
+
+    mysqli_stmt_close($stmt);
+
+    // Redirect to avoid form resubmission
+    header("Location: users.php");
+    exit();
+}
+
+// Handle user deletion
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_user'])) {
+    $user_id = $_POST['user_id'];
+
+    $deleteQuery = "DELETE FROM users WHERE user_id = ?";
+    $stmt = mysqli_prepare($conn, $deleteQuery);
+    mysqli_stmt_bind_param($stmt, "s", $user_id);
+
+    if (mysqli_stmt_execute($stmt)) {
+        $_SESSION['success_message'] = "User deleted successfully!";
+    } else {
+        $_SESSION['error_message'] = "Error deleting user: " . mysqli_error($conn);
+    }
+
+    mysqli_stmt_close($stmt);
+
+    // Redirect to avoid form resubmission
+    header("Location: users.php");
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -38,9 +91,25 @@ while ($user = mysqli_fetch_assoc($result)) {
     <div class="dashboard-layout">
         <?php include("sidebar.php") ?>
         <main class="main-content">
+        <?php if (isset($_SESSION['success_message'])): ?>
+    <div class="alert alert-success">
+        <?php echo htmlspecialchars($_SESSION['success_message']); ?>
+        <?php unset($_SESSION['success_message']); ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['error_message'])): ?>
+            <div class="alert alert-danger">
+                <?php echo htmlspecialchars($_SESSION['error_message']); ?>
+                <?php unset($_SESSION['error_message']); ?>
+            </div>
+        <?php endif; ?>
             <div class="content-wrapper">
                 <div class="management-header">
                     <h2> User Management </h2>
+                    <button class="btn btn-refresh" onclick="location.reload();">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
                 </div>
 
                 <div class="table-container">
@@ -69,10 +138,10 @@ while ($user = mysqli_fetch_assoc($result)) {
                                         <td><?php echo htmlspecialchars($user['role']); ?></td>
                                         <td><?php echo htmlspecialchars($user['created_at']); ?></td>
                                         <td class="actions">
-                                            <button class="btn-icon btn-edit">
+                                            <button class="btn-icon btn-edit" onclick="openEditUserModal('<?php echo htmlspecialchars($user['user_id']); ?>', '<?php echo htmlspecialchars($user['first_name']); ?>', '<?php echo htmlspecialchars($user['last_name']); ?>', '<?php echo htmlspecialchars($user['email']); ?>', '<?php echo htmlspecialchars($user['phone']); ?>', '<?php echo htmlspecialchars($user['role']); ?>')">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <button class="btn-icon btn-delete">
+                                            <button class="btn-icon btn-delete" onclick="openDeleteUserModal('<?php echo htmlspecialchars($user['user_id']); ?>')">
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
                                         </td>
@@ -89,5 +158,6 @@ while ($user = mysqli_fetch_assoc($result)) {
             </div>
         </main>
     </div>
+    <?php include("users-modals.html"); ?>
 </body>
 </html>

@@ -8,17 +8,6 @@ if (!isset($_SESSION['user_name']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
-// Display messages if they exist
-if (isset($_SESSION['success_message'])) {
-    echo '<div class="alert alert-success">' . $_SESSION['success_message'] . '</div>';
-    unset($_SESSION['success_message']);
-}
-
-if (isset($_SESSION['error_message'])) {
-    echo '<div class="alert alert-danger">' . $_SESSION['error_message'] . '</div>';
-    unset($_SESSION['error_message']);
-}
-
 // Process form submission for adding new screens
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_screen'])) {
     // Generate a unique screen ID first
@@ -101,7 +90,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_screen'])) {
         }
 
         mysqli_commit($conn);
-        $_SESSION['success_message'] = "Screen and " . $seats_created . " seats added successfully!";
+            $_SESSION['success_message'] = "Screen and " . $seats_created . " seats added successfully!";
         header("Location: screens.php");
         exit();
 
@@ -199,8 +188,16 @@ if (!$result) {
     <?php include("header.php") ?>
     <div class="dashboard-layout">
         <?php include("sidebar.php") ?>
-
         <main class="main-content">
+        <?php if (isset($_SESSION['success_message'])): ?>
+            <p><?php echo htmlspecialchars($_SESSION['success_message']); ?></p>
+            <?php unset($_SESSION['success_message']); ?>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['error_message'])): ?>
+            <p><?php echo htmlspecialchars($_SESSION['error_message']); ?></p>
+            <?php unset($_SESSION['error_message']); ?>
+        <?php endif; ?>
             <div class="content-wrapper">
                 <div class="management-header">
                     <h2>Screen Management</h2>

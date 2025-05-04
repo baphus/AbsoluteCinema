@@ -22,9 +22,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_booking'])) {
     mysqli_stmt_bind_param($stmt, "iisss", $user_id, $showtime_id, $booking_date, $total_price, $status);
 
     if (mysqli_stmt_execute($stmt)) {
-        $success_message = "Booking added successfully!";
+        $_SESSION['success_message'] = "Booking added successfully!";
     } else {
-        $error_message = "Error adding booking: " . mysqli_error($conn);
+        $_SESSION['error_message'] = "Error adding booking: " . mysqli_error($conn);
     }
 
     mysqli_stmt_close($stmt);
@@ -45,12 +45,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_booking'])) {
     mysqli_stmt_bind_param($stmt, "iisssi", $user_id, $showtime_id, $booking_date, $total_price, $status, $booking_id);
 
     if (mysqli_stmt_execute($stmt)) {
-        $success_message = "Booking updated successfully!";
+        $_SESSION['success_message'] = "Booking updated successfully!";
     } else {
-        $error_message = "Error updating booking: " . mysqli_error($conn);
+        $_SESSION['error_message'] = "Error updating booking: " . mysqli_error($conn);
     }
 
     mysqli_stmt_close($stmt);
+
+    // Redirect to avoid form resubmission
+    header("Location: bookings.php");
+    exit();
 }
 
 // Fetch all bookings
@@ -110,6 +114,15 @@ if (!$result) {
         <?php include("sidebar.php") ?>
 
         <main class="main-content">
+        <?php if (isset($_SESSION['success_message'])): ?>
+            <p><?php echo htmlspecialchars($_SESSION['success_message']); ?></p>
+            <?php unset($_SESSION['success_message']); ?>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['error_message'])): ?>
+            <p><?php echo htmlspecialchars($_SESSION['error_message']); ?></p>
+            <?php unset($_SESSION['error_message']); ?>
+        <?php endif; ?>
             <div class="content-wrapper">
                 <div class="management-header">
                     <h2>Booking Management</h2>

@@ -18,9 +18,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_seating'])) {
     mysqli_stmt_bind_param($stmt, "ss", $status, $seat_id);
 
     if (mysqli_stmt_execute($stmt)) {
-        $success_message = "Seat status updated successfully!";
+        $_SESSION['success_message']  = "Seat status updated successfully!";
     } else {
-        $error_message = "Error updating seat status: " . mysqli_error($conn);
+        $_SESSION['error_message']  = "Error updating seat status: " . mysqli_error($conn);
     }
 
     mysqli_stmt_close($stmt);
@@ -55,6 +55,15 @@ if (!$result) {
         <?php include("sidebar.php") ?>
 
         <main class="main-content">
+        <?php if (isset($_SESSION['success_message'])): ?>
+            <p><?php echo htmlspecialchars($_SESSION['success_message']); ?></p>
+            <?php unset($_SESSION['success_message']); ?>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['error_message'])): ?>
+            <p><?php echo htmlspecialchars($_SESSION['error_message']); ?></p>
+            <?php unset($_SESSION['error_message']); ?>
+        <?php endif; ?>
             <div class="content-wrapper">
                 <div class="management-header">
                     <h2>Seating Management</h2>

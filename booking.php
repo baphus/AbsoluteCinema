@@ -1,7 +1,6 @@
 <?php
 session_start();
 include("config.php");
-
 // Check if the user is logged in
 if (!isset($_SESSION['user_id'])) {
     error_log("User ID not set in session. Redirecting to login.");
@@ -27,19 +26,37 @@ if (isset($_GET['movie_id'])) {
         $movie = mysqli_fetch_assoc($result);
         
         // Fetch available showtimes for this movie
-        $showtimeQuery = "SELECT s.*, scr.screen_name, scr.screen_id 
-                         FROM showtimes s 
-                         JOIN screens scr ON s.screen = scr.screen_name 
-                         WHERE s.movie_title = ? AND s.status = 'Available' 
-                         AND s.date >= CURDATE() 
-                         ORDER BY s.date, s.time";
+        $showtimeQuery = "
+            SELECT s.*, scr.screen_name, scr.screen_id, m.title AS movie_title 
+            FROM showtimes s
+            JOIN screens scr ON s.screen_id = scr.screen_id
+            JOIN movies m ON s.movie_id = m.movie_id
+            WHERE s.movie_id = ? AND s.status = 'Available' 
+            AND s.show_date >= CURDATE()
+            ORDER BY s.show_date, s.start_time";
         $stmt = mysqli_prepare($conn, $showtimeQuery);
-        mysqli_stmt_bind_param($stmt, "s", $movie['title']);
+        mysqli_stmt_bind_param($stmt, "s", $movie_id);
         mysqli_stmt_execute($stmt);
         $showtimeResult = mysqli_stmt_get_result($stmt);
         $showtimes = [];
         while ($row = mysqli_fetch_assoc($showtimeResult)) {
             $showtimes[] = $row;
+        }
+
+        // Fetch available screens for this movie
+        $screenQuery = "
+            SELECT DISTINCT scr.screen_id, scr.screen_name 
+            FROM screens scr
+            JOIN showtimes s ON scr.screen_id = s.screen_id
+            WHERE s.movie_id = ? AND s.status = 'Available' AND s.show_date >= CURDATE()
+            ORDER BY scr.screen_name";
+        $stmt = mysqli_prepare($conn, $screenQuery);
+        mysqli_stmt_bind_param($stmt, "s", $movie_id);
+        mysqli_stmt_execute($stmt);
+        $screenResult = mysqli_stmt_get_result($stmt);
+        $screens = [];
+        while ($row = mysqli_fetch_assoc($screenResult)) {
+            $screens[] = $row;
         }
     } else {
         header("Location: 404.php");
@@ -73,42 +90,63 @@ if (isset($_GET['movie_id'])) {
         <div class="booking-grid">
             <div class="left-column">
                 <div class="booking-section">
-                    <h2>Select Date & Time</h2>
-                    <label class="date-label">Available Showtimes</label>
-                    <div class="showtime-options">
-                        <?php foreach ($showtimes as $showtime): ?>
-                            <div class="showtime-option">
-                                <input type="radio" name="showtime" 
-                                       id="showtime_<?php echo $showtime['showtime_id']; ?>" 
-                                       value="<?php echo $showtime['showtime_id']; ?>"
-                                       data-screen="<?php echo htmlspecialchars($showtime['screen_name']); ?>"
-                                       data-price="<?php echo htmlspecialchars($showtime['price']); ?>">
-                                <label for="showtime_<?php echo $showtime['showtime_id']; ?>">
-                                    <?php 
-                                        echo date('M d', strtotime($showtime['date'])) . ' - ' . 
-                                             date('h:i A', strtotime($showtime['time'])) . ' - ' .
-                                             htmlspecialchars($showtime['screen_name']); 
-                                    ?>
-                                </label>
-                            </div>
+                    <h2>Select Screen</h2>
+                    <label for="screen-dropdown">Available Screens:</label>
+                    <select id="screen-dropdown" name="screen" required>
+                        <option value="">Select a screen</option>
+                        <?php foreach ($screens as $screen): ?>
+                            <option value="<?php echo htmlspecialchars($screen['screen_id']); ?>">
+                                <?php echo htmlspecialchars($screen['screen_name']); ?>
+                            </option>
                         <?php endforeach; ?>
-                    </div>
+                    </select>
                 </div>
 
                 <div class="booking-section">
-                    <h2>Select your seats</h2>
-                    <div id="screen-selection" style="display: none;">
-                        <div class="screen-info">
-                            <p>Screen: <span id="selected-screen"></span></p>
-                            <p>Price per seat: ₱<span id="seat-price">0.00</span></p>
-                        </div>
-                        
-                        <div class="seat-selection">
-                            <div id="seat-map" class="seat-map">
-                                <!-- Seats will be loaded dynamically -->
-                            </div>
-                        </div>
-                    </div>
+                    <h2>Select Date & Time</h2>
+                    <form method="POST" action="booking.php?movie_id=<?php echo htmlspecialchars($movie_id); ?>">
+                        <label for="datetime-dropdown">Available Showtimes:</label>
+                        <select id="datetime-dropdown" name="showtime_id" required onchange="this.form.submit()">
+                            <option value="">Select a date & time</option>
+                            <?php foreach ($showtimes as $showtime): ?>
+                                <option value="<?php echo htmlspecialchars($showtime['showtime_id']); ?>" 
+                                    <?php echo (isset($_POST['showtime_id']) && $_POST['showtime_id'] == $showtime['showtime_id']) ? 'selected' : ''; ?>>
+                                    <?php echo date('M d', strtotime($showtime['show_date'])) . ' - ' . 
+                                               date('h:i A', strtotime($showtime['start_time'])) . ' - ' . 
+                                               htmlspecialchars($showtime['screen_name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </form>
+                </div>
+
+                <div class="booking-section">
+                    <h2>Select Seats</h2>
+                    <label for="seat-dropdown">Available Seats:</label>
+                    <select id="seat-dropdown" name="seats[]" multiple required>
+                        <option value="">Select seats</option>
+                        <?php
+                        if (isset($_POST['showtime_id'])) {
+                            $showtime_id = mysqli_real_escape_string($conn, $_POST['showtime_id']);
+
+                            // Fetch available seats for the selected showtime
+                            $seatQuery = "SELECT seat_id, row_label, seat_number 
+                                          FROM seats 
+                                          WHERE showtime_id = ? AND status = 'available' 
+                                          ORDER BY row_label, seat_number";
+                            $stmt = mysqli_prepare($conn, $seatQuery);
+                            mysqli_stmt_bind_param($stmt, "s", $showtime_id);
+                            mysqli_stmt_execute($stmt);
+                            $seatResult = mysqli_stmt_get_result($stmt);
+
+                            while ($seat = mysqli_fetch_assoc($seatResult)) {
+                                echo '<option value="' . htmlspecialchars($seat['seat_id']) . '">' .
+                                     htmlspecialchars($seat['row_label'] . $seat['seat_number']) .
+                                     '</option>';
+                            }
+                        }
+                        ?>
+                    </select>
                 </div>
             </div>
 
@@ -126,9 +164,9 @@ if (isset($_GET['movie_id'])) {
                     </div>
 
                     <div class="booking-details">
-                        <p><strong>Date:</strong> April 26, 2025</p>
-                        <p><strong>Time:</strong> 11:00 AM</p>
-                        <p><strong>Screen:</strong> Cinema 2</p>
+                        <p><strong>Date:</strong> <span id="selectedDate">N/A</span></p>
+                        <p><strong>Time:</strong> <span id="selectedTime">N/A</span></p>
+                        <p><strong>Screen:</strong> <span id="selectedScreen">N/A</span></p>
                     </div>
 
                     <div class="divider"></div>
@@ -143,179 +181,83 @@ if (isset($_GET['movie_id'])) {
                     <div class="price-breakdown">
                         <div class="price-row">
                             <span>Ticket (<span id="ticketCountDisplay">0</span>)</span>
-                            <span id="ticketPrice">$0.00</span>
+                            <span id="ticketPrice">₱0.00</span>
                         </div>
                         <div class="price-row">
                             <span>Booking Fee</span>
-                            <span>$1.00</span>
-                        </div>
-                        <div class="price-row">
-                            <span>Tax</span>
-                            <span>$0.00</span>
+                            <span>₱50.00</span>
                         </div>
                         <div class="price-total">
                             <span>Total</span>
-                            <span id="totalPrice">$1.00</span>
+                            <span id="totalPrice">₱50.00</span>
                         </div>
+                    </div>
 
-                    <a href="#" class="payment-button">Continue to Payment</a>
+                    <a href="payment.html" class="payment-button">Continue to Payment</a>
                 </div>
             </div>
         </div>
     </div>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const showtimeOptions = document.querySelectorAll('input[name="showtime"]');
-            const screenSelection = document.getElementById('screen-selection');
-            const selectedScreen = document.getElementById('selected-screen');
-            const seatPrice = document.getElementById('seat-price');
-            const seatMap = document.getElementById('seat-map');
+        document.addEventListener('DOMContentLoaded', function () {
+            const screenDropdown = document.getElementById('screen-dropdown');
+            const datetimeDropdown = document.getElementById('datetime-dropdown');
+            const seatDropdown = document.getElementById('seat-dropdown');
 
-            showtimeOptions.forEach(option => {
-                option.addEventListener('change', function() {
-                    selectedScreen.textContent = this.dataset.screen;
-                    seatPrice.textContent = parseFloat(this.dataset.price).toFixed(2);
-                    screenSelection.style.display = 'block';
-                    
-                    // Load seats for selected screen
-                    fetch(`get_seats.php?screen=${this.dataset.screen}`)
+            // Reset dropdowns
+            function resetDropdown(dropdown, placeholder) {
+                dropdown.innerHTML = `<option value="">${placeholder}</option>`;
+                dropdown.disabled = true;
+            }
+
+            // Load showtimes when a screen is selected
+            screenDropdown.addEventListener('change', function () {
+                const screenId = this.value;
+
+                // Reset dependent dropdowns
+                resetDropdown(datetimeDropdown, 'Select a date & time');
+                resetDropdown(seatDropdown, 'Select seats');
+
+                if (screenId) {
+                    // Enable and populate the date & time dropdown
+                    fetch(`get_showtimes.php?screen_id=${screenId}`)
+                        .then(response => response.json())
+                        .then(showtimes => {
+                            datetimeDropdown.disabled = false;
+                            showtimes.forEach(showtime => {
+                                const option = document.createElement('option');
+                                option.value = showtime.showtime_id;
+                                option.textContent = `${showtime.show_date} - ${showtime.start_time}`;
+                                datetimeDropdown.appendChild(option);
+                            });
+                        });
+                }
+            });
+
+            // Load seats when a date & time is selected
+            datetimeDropdown.addEventListener('change', function () {
+                const showtimeId = this.value;
+
+                // Reset the seat dropdown
+                resetDropdown(seatDropdown, 'Select seats');
+
+                if (showtimeId) {
+                    // Enable and populate the seat dropdown
+                    fetch(`get_seats.php?showtime_id=${showtimeId}`)
                         .then(response => response.json())
                         .then(seats => {
-                            displaySeats(seats);
+                            seatDropdown.disabled = false;
+                            seats.forEach(seat => {
+                                const option = document.createElement('option');
+                                option.value = seat.seat_id;
+                                option.textContent = `${seat.row_label}${seat.seat_number}`;
+                                seatDropdown.appendChild(option);
+                            });
                         });
-                });
+                }
             });
-
-            function displaySeats(seats) {
-                seatMap.innerHTML = '';
-                let currentRow = '';
-                let rowDiv;
-
-                seats.forEach(seat => {
-                    if (seat.row_label !== currentRow) {
-                        currentRow = seat.row_label;
-                        rowDiv = document.createElement('div');
-                        rowDiv.className = 'seat-row';
-                        rowDiv.innerHTML = `<div class="row-label">${currentRow}</div>`;
-                        seatMap.appendChild(rowDiv);
-                    }
-
-                    const seatButton = document.createElement('button');
-                    seatButton.className = `seat ${seat.status.toLowerCase()}`;
-                    seatButton.dataset.seatId = seat.seat_id;
-                    seatButton.textContent = seat.seat_number;
-                    
-                    if (seat.status === 'available') {
-                        seatButton.addEventListener('click', () => selectSeat(seatButton));
-                    }
-
-                    rowDiv.appendChild(seatButton);
-                });
-            }
-
-            function selectSeat(seatButton) {
-                seatButton.classList.toggle('selected');
-                updateBookingSummary();
-            }
         });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const ticketCountSelect = document.getElementById('ticketCount');
-            const seatSelect = document.getElementById('seatSelect');
-            const selectedSeatsDisplay = document.getElementById('selectedSeatsDisplay');
-            const selectedSeatsText = document.getElementById('selectedSeatsText');
-            const ticketCountDisplay = document.getElementById('ticketCountDisplay');
-            const ticketPrice = document.getElementById('ticketPrice');
-            const totalPrice = document.getElementById('totalPrice');
-            
-            let selectedSeats = [];
-            let maxSeats = 1;
-            
-            // Update maximum seats based on ticket count
-            ticketCountSelect.addEventListener('change', function() {
-                maxSeats = parseInt(this.value);
-                ticketCountDisplay.textContent = maxSeats;
-                
-                // Remove excess selected seats if ticket count is decreased
-                if (selectedSeats.length > maxSeats) {
-                    selectedSeats = selectedSeats.slice(0, maxSeats);
-                    updateSeatsDisplay();
-                    updatePriceCalculation();
-                }
-            });
-            
-            // Handle seat selection
-            seatSelect.addEventListener('change', function() {
-                const selectedSeat = this.value;
-                
-                if (selectedSeat && !selectedSeats.includes(selectedSeat)) {
-                    if (selectedSeats.length < maxSeats) {
-                        selectedSeats.push(selectedSeat);
-                        updateSeatsDisplay();
-                        updatePriceCalculation();
-                    } else {
-                        alert(`You can only select up to ${maxSeats} seat(s). Please remove a seat first.`);
-                    }
-                }
-                
-                // Reset dropdown to default option after selection
-                this.selectedIndex = 0;
-            });
-            
-            // Update the visual display of selected seats
-            function updateSeatsDisplay() {
-                if (selectedSeats.length === 0) {
-                    selectedSeatsDisplay.innerHTML = '<div class="no-seats">No seats selected</div>';
-                    selectedSeatsText.textContent = 'No seat selected';
-                } else {
-                    selectedSeatsDisplay.innerHTML = '';
-                    selectedSeats.forEach(seat => {
-                        const seatElement = document.createElement('div');
-                        seatElement.classList.add('seat');
-                        seatElement.textContent = seat;
-                        seatElement.setAttribute('data-seat', seat);
-                        seatElement.addEventListener('click', function() {
-                            removeSeat(seat);
-                        });
-                        selectedSeatsDisplay.appendChild(seatElement);
-                    });
-                    
-                    selectedSeatsText.textContent = selectedSeats.join(', ');
-                }
-            }
-            
-            // Remove a seat when clicked
-            function removeSeat(seat) {
-                selectedSeats = selectedSeats.filter(s => s !== seat);
-                updateSeatsDisplay();
-                updatePriceCalculation();
-            }
-            
-            // Calculate and update price information
-            function updatePriceCalculation() {
-                let price = 0;
-                
-                selectedSeats.forEach(seat => {
-                    // Premium seats (rows A-B)
-                    if (seat.startsWith('A') || seat.startsWith('B')) {
-                        price += 14;
-                    } 
-                    // Standard seats (rows C-E)
-                    else if (seat.startsWith('C') || seat.startsWith('D') || seat.startsWith('E')) {
-                        price += 12;
-                    }
-                });
-                
-                // Update price displays
-                ticketPrice.textContent = `$${price.toFixed(2)}`;
-                totalPrice.textContent = `$${(price + 1).toFixed(2)}`; // Adding $1 booking fee
-                ticketCountDisplay.textContent = selectedSeats.length;
-            }
-            
-            // Initialize
-            updateSeatsDisplay();
-        });
-    </script>    <?php include("footer.php"); ?>
+    </script>
+    <?php include("footer.php"); ?>
 </body>
-
 </html>

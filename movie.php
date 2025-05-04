@@ -2,12 +2,11 @@
 session_start();
 include("config.php");
 
-// Check if movie_id is provided in the URL
 if (isset($_GET['movie_id'])) {
-    $movie_id = intval($_GET['movie_id']); // Sanitize the input to prevent SQL injection
+    $movie_id = mysqli_real_escape_string($conn, $_GET['movie_id']); 
 
     // Fetch the movie details from the database
-    $getMovieQuery = "SELECT * FROM movies WHERE movie_id = $movie_id";
+    $getMovieQuery = "SELECT * FROM movies WHERE movie_id = '$movie_id'";
     $result = mysqli_query($conn, $getMovieQuery);
 
     if ($result && mysqli_num_rows($result) > 0) {
@@ -62,7 +61,7 @@ if (isset($_GET['movie_id'])) {
                 </div>
 
                 <div class="action-buttons">
-                    <a href="booking.php?movie_id=<?php echo $movie_id; ?>" class="btn btn-primary">Book Ticket</a>
+                    <a href="booking.php?movie_id=<?php echo htmlspecialchars($movie['movie_id']); ?>" class="btn btn-primary">Book Ticket</a>
                     <a href="#" class="btn btn-secondary">Watch Trailer</a>
                 </div>
             </div>

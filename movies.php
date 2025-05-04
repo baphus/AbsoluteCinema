@@ -62,15 +62,55 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_movie'])) {
                            $director, $release_date, $date_added, $status, $poster, $banner);
 
     if (mysqli_stmt_execute($stmt)) {
-        echo "Movie added successfully!";
+        $_SESSION['success_message'] = "Movie added successfully!";
     } else {
-        echo "Error adding movie";
+        $_SESSION['error_message'] = "Error adding movie: " . mysqli_error($conn);
+    }
+
+    mysqli_stmt_close($stmt);
+
+    // Redirect to avoid form resubmission
+    header("Location: movies.php");
+    exit();
+
+    mysqli_stmt_close($stmt);
+}
+
+// Update movie form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_movie'])) {
+    $movie_id = $_POST['movie_id'];
+    $title = $_POST['title'];
+    $genre = $_POST['genre'];
+    $duration = $_POST['duration'];
+    $rating = $_POST['rating'];
+    $description = $_POST['description'];
+    $director = $_POST['director'];
+    $release_date = $_POST['release_date'];
+    $status = $_POST['status'];
+
+    $updateQuery = "UPDATE movies SET 
+                    title = ?, 
+                    genre = ?, 
+                    duration = ?, 
+                    rating = ?, 
+                    description = ?, 
+                    director = ?, 
+                    release_date = ?, 
+                    status = ? 
+                    WHERE movie_id = ?";
+    $stmt = mysqli_prepare($conn, $updateQuery);
+    mysqli_stmt_bind_param($stmt, "ssissssss", $title, $genre, $duration, $rating, $description, $director, $release_date, $status, $movie_id);
+
+    if (mysqli_stmt_execute($stmt)) {
+      $_SESSION['success_message'] = "Movie updated successfully!";
+    } else {
+      $_SESSION['error_message'] = "Error updating movie: " . mysqli_error($conn);
     }
 
     mysqli_stmt_close($stmt);
 }
 
-//Delete movie form submission
+// Delete movie form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_movie'])) {
   $movie_id = $_POST['movie_id'];
 
@@ -79,9 +119,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_movie'])) {
   mysqli_stmt_bind_param($stmt, "s", $movie_id);
 
   if (mysqli_stmt_execute($stmt)) {
-      echo "Movie deleted successfully";
+       $_SESSION['success_message'] = "Movie deleted successfully";
   } else {
-      echo "Error deleting movie";
+       $_SESSION['error_message'] = "Error deleting movie";
   }
 
   mysqli_stmt_close($stmt);
@@ -127,6 +167,16 @@ if (!$result) {
     <div class="dashboard-layout">
       <?php include("sidebar.php") ?>
       <main class="main-content">
+      <?php if (isset($_SESSION['success_message'])): ?>
+          <p><?php echo htmlspecialchars($_SESSION['success_message']); ?></p>
+          <?php unset($_SESSION['success_message']); ?>
+      <?php endif; ?>
+
+      <?php if (isset($_SESSION['error_message'])): ?>
+          <p><?php echo htmlspecialchars($_SESSION['error_message']); ?></p>
+          <?php unset($_SESSION['error_message']); ?>
+      <?php endif; ?>
+
           <div class="content-wrapper">
           <div class="management-header">
             <h2>Movie Management</h2>
@@ -188,6 +238,9 @@ if (!$result) {
                             <td><img src="<?php echo htmlspecialchars($movie['poster']); ?>" alt="Poster" style="width: 50px;"></td>
                             <td><img src="<?php echo htmlspecialchars($movie['banner']); ?>" alt="Banner" style="width: 100px;"></td>
                             <td class="actions">
+                                <button class="btn-icon btn-edit" onclick="openEditModal('<?php echo htmlspecialchars($movie['movie_id']); ?>', '<?php echo htmlspecialchars($movie['title']); ?>', '<?php echo htmlspecialchars($movie['genre']); ?>', '<?php echo htmlspecialchars($movie['duration']); ?>', '<?php echo htmlspecialchars($movie['rating']); ?>', '<?php echo htmlspecialchars($movie['description']); ?>', '<?php echo htmlspecialchars($movie['director']); ?>', '<?php echo htmlspecialchars($movie['release_date']); ?>', '<?php echo htmlspecialchars($movie['status']); ?>')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
                                 <button class="btn-icon btn-delete" onclick="openDeleteModal('<?php echo htmlspecialchars($movie['movie_id']); ?>')">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
