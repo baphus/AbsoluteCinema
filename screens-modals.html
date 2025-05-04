@@ -5,6 +5,76 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="/styles/modal.css">
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          // Add Screen Modal
+          const addModal = document.getElementById('addModal');
+          const addScreenBtn = document.getElementById('add-screen-btn');
+          const addModalCloseBtn = document.querySelector('#addModal .close-btn');
+  
+          addScreenBtn.addEventListener('click', function () {
+            addModal.style.display = 'block';
+          });
+  
+          addModalCloseBtn.addEventListener('click', function () {
+            addModal.style.display = 'none';
+          });
+  
+          window.addEventListener('click', function (event) {
+            if (event.target == addModal) {
+              addModal.style.display = 'none';
+            }
+          });
+  
+          // Edit Screen Modal
+          const editModal = document.getElementById('editModal');
+          const editModalCloseBtn = document.querySelector('#editModal .close-btn');
+  
+          window.openEditModal = function (screen_id, screen_name, capacity, screen_type, audio_system, status, notes) {
+            document.getElementById('edit_screen_id').value = screen_id;
+            document.getElementById('edit_screen_name').value = screen_name;
+            document.getElementById('edit_capacity').value = capacity;
+            document.getElementById('edit_screen_type').value = screen_type;
+            document.getElementById('edit_audio_system').value = audio_system;
+            document.getElementById('edit_status').value = status;
+            document.getElementById('edit_notes').value = notes;
+            editModal.style.display = 'block';
+          };
+  
+          editModalCloseBtn.addEventListener('click', function () {
+            editModal.style.display = 'none';
+          });
+  
+          window.addEventListener('click', function (event) {
+            if (event.target == editModal) {
+              editModal.style.display = 'none';
+            }
+          });
+  
+          // Delete Screen Modal
+          const deleteModal = document.getElementById('deleteModal');
+          const deleteModalCloseBtns = document.querySelectorAll('#deleteModal .close-btn');
+  
+          window.openDeleteModal = function (screenId) {
+              document.getElementById('delete_screen_id').value = screenId;
+              deleteModal.style.display = 'block';
+          };
+  
+          // Close delete modal
+          deleteModalCloseBtns.forEach(btn => {
+              btn.addEventListener('click', function () {
+                  deleteModal.style.display = 'none';
+              });
+          });
+  
+          // Close modal when clicking outside
+          window.addEventListener('click', function (event) {
+              if (event.target == deleteModal) {
+                  deleteModal.style.display = 'none';
+              }
+          });
+        });
+      </script>
 </head>
 <body>
     <!-- Add Screen Modal -->

@@ -8,78 +8,108 @@ if (!isset($_SESSION['user_name']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
+// Display messages if they exist
+if (isset($_SESSION['success_message'])) {
+    echo '<div class="alert alert-success">' . $_SESSION['success_message'] . '</div>';
+    unset($_SESSION['success_message']);
+}
+
+if (isset($_SESSION['error_message'])) {
+    echo '<div class="alert alert-danger">' . $_SESSION['error_message'] . '</div>';
+    unset($_SESSION['error_message']);
+}
+
 // Process form submission for adding new screens
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_screen'])) {
+    // Generate a unique screen ID first
+    $screen_id = substr(uniqid("SCRN_"), 0, 9);
     $screen_name = $_POST['screen_name'];
     $capacity = $_POST['capacity'];
     $screen_type = $_POST['screen_type'];
     $audio_system = $_POST['audio_system'];
     $status = $_POST['status'];
     $notes = $_POST['notes'];
-
-    // Start transaction
+    
     mysqli_begin_transaction($conn);
 
     try {
-        $insertQuery = "INSERT INTO screens (screen_name, capacity, screen_type, audio_system, status, notes) 
-                        VALUES (?, ?, ?, ?, ?, ?)";
+        // Insert screen
+        $insertQuery = "INSERT INTO screens (screen_id, screen_name, capacity, screen_type, audio_system, status, notes) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?)";
         $stmt = mysqli_prepare($conn, $insertQuery);
-        mysqli_stmt_bind_param($stmt, "sissss", $screen_name, $capacity, $screen_type, $audio_system, $status, $notes);
+        
+        if (!$stmt) {
+            throw new Exception("Failed to prepare screen insert statement: " . mysqli_error($conn));
+        }
+        
+        mysqli_stmt_bind_param($stmt, "ssissss", 
+            $screen_id, 
+            $screen_name, 
+            $capacity, 
+            $screen_type, 
+            $audio_system, 
+            $status, 
+            $notes
+        );
 
-        if (mysqli_stmt_execute($stmt)) {
-            $screen_id = mysqli_insert_id($conn);
-            
-            // Calculate rows and seats per row based on capacity
-            $seats_per_row = 10; // Default seats per row
-            $num_rows = ceil($capacity / $seats_per_row);
-            
-            // Array of row labels (A-Z)
-            $row_labels = range('A', 'Z');
-            $seats_created = 0;
-            
-            // Create seats for each row
-            for ($row = 0; $row < $num_rows && $seats_created < $capacity; $row++) {
-                if ($row >= count($row_labels)) {
-                    throw new Exception("Too many rows needed for capacity. Maximum rows: " . count($row_labels));
-                }
-                
-                $row_label = $row_labels[$row];
-                $seats_this_row = min($seats_per_row, $capacity - $seats_created);
-                
-                // Create seats for this row
-                for ($seat_num = 1; $seat_num <= $seats_this_row; $seat_num++) {
-                    $seat_id = sprintf("SEAT_%04d_%s_%02d", $screen_id, $row_label, $seat_num);
-                    $seatQuery = "INSERT INTO seats (seat_id, screen_id, row_label, seat_number, status) 
-                                 VALUES (?, ?, ?, ?, 'available')";
-                    $seatStmt = mysqli_prepare($conn, $seatQuery);
-                    
-                    if (!$seatStmt) {
-                        throw new Exception("Failed to prepare seat insert statement: " . mysqli_error($conn));
-                    }
-                    
-                    mysqli_stmt_bind_param($seatStmt, "sisi", $seat_id, $screen_id, $row_label, $seat_num);
-                    
-                    if (!mysqli_stmt_execute($seatStmt)) {
-                        throw new Exception("Failed to insert seat: " . mysqli_stmt_error($seatStmt));
-                    }
-                    
-                    mysqli_stmt_close($seatStmt);
-                    $seats_created++;
-                }
-            }
-            
-            mysqli_commit($conn);
-            $success_message = "Screen and " . $seats_created . " seats added successfully!";
-        } else {
+        if (!mysqli_stmt_execute($stmt)) {
             throw new Exception("Failed to insert screen: " . mysqli_stmt_error($stmt));
         }
+        
+        mysqli_stmt_close($stmt);
+
+        // Create seats
+        $seats_per_row = 10;
+        $num_rows = ceil($capacity / $seats_per_row);
+        $row_labels = array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 
+                          'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z');
+        $seats_created = 0;
+
+        for ($row = 0; $row < $num_rows && $seats_created < $capacity; $row++) {
+            if ($row >= count($row_labels)) {
+                throw new Exception("Too many rows needed for capacity. Maximum rows: " . count($row_labels));
+            }
+
+            $row_label = $row_labels[$row]; // This ensures row_label is a single character
+            $seats_this_row = min($seats_per_row, $capacity - $seats_created);
+
+            for ($seat_num = 1; $seat_num <= $seats_this_row; $seat_num++) {
+                $seat_id = sprintf("SEAT_%s_%s_%02d", $screen_id, $row_label, $seat_num);
+                $seatQuery = "INSERT INTO seats (seat_id, screen_id, row_label, seat_number, status) 
+                             VALUES (?, ?, ?, ?, 'available')";
+                $seatStmt = mysqli_prepare($conn, $seatQuery);
+
+                if (!$seatStmt) {
+                    throw new Exception("Failed to prepare seat insert statement: " . mysqli_error($conn));
+                }
+
+                // Explicitly bind row_label as a single character
+                mysqli_stmt_bind_param($seatStmt, "sssi", 
+                    $seat_id, 
+                    $screen_id, 
+                    $row_label,  // This is now guaranteed to be a single character
+                    $seat_num
+                );
+
+                if (!mysqli_stmt_execute($seatStmt)) {
+                    throw new Exception("Failed to insert seat: " . mysqli_stmt_error($seatStmt));
+                }
+
+                mysqli_stmt_close($seatStmt);
+                $seats_created++;
+            }
+        }
+
+        mysqli_commit($conn);
+        $_SESSION['success_message'] = "Screen and " . $seats_created . " seats added successfully!";
+        header("Location: screens.php");
+        exit();
+
     } catch (Exception $e) {
         mysqli_rollback($conn);
-        $error_message = "Error: " . $e->getMessage();
-    } finally {
-        if (isset($stmt)) {
-            mysqli_stmt_close($stmt);
-        }
+        $_SESSION['error_message'] = "Error: " . $e->getMessage();
+        header("Location: screens.php");
+        exit();
     }
 }
 
@@ -129,76 +159,7 @@ if (!$result) {
     <title>Admin Dashboard - Screens</title>
     <link rel="stylesheet" href="/styles/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        // Add Screen Modal
-        const addModal = document.getElementById('addModal');
-        const addScreenBtn = document.getElementById('add-screen-btn');
-        const addModalCloseBtn = document.querySelector('#addModal .close-btn');
-
-        addScreenBtn.addEventListener('click', function () {
-          addModal.style.display = 'block';
-        });
-
-        addModalCloseBtn.addEventListener('click', function () {
-          addModal.style.display = 'none';
-        });
-
-        window.addEventListener('click', function (event) {
-          if (event.target == addModal) {
-            addModal.style.display = 'none';
-          }
-        });
-
-        // Edit Screen Modal
-        const editModal = document.getElementById('editModal');
-        const editModalCloseBtn = document.querySelector('#editModal .close-btn');
-
-        window.openEditModal = function (screen_id, screen_name, capacity, screen_type, audio_system, status, notes) {
-          document.getElementById('edit_screen_id').value = screen_id;
-          document.getElementById('edit_screen_name').value = screen_name;
-          document.getElementById('edit_capacity').value = capacity;
-          document.getElementById('edit_screen_type').value = screen_type;
-          document.getElementById('edit_audio_system').value = audio_system;
-          document.getElementById('edit_status').value = status;
-          document.getElementById('edit_notes').value = notes;
-          editModal.style.display = 'block';
-        };
-
-        editModalCloseBtn.addEventListener('click', function () {
-          editModal.style.display = 'none';
-        });
-
-        window.addEventListener('click', function (event) {
-          if (event.target == editModal) {
-            editModal.style.display = 'none';
-          }
-        });
-
-        // Delete Screen Modal
-        const deleteModal = document.getElementById('deleteModal');
-        const deleteModalCloseBtns = document.querySelectorAll('#deleteModal .close-btn');
-
-        window.openDeleteModal = function (screenId) {
-            document.getElementById('delete_screen_id').value = screenId;
-            deleteModal.style.display = 'block';
-        };
-
-        // Close delete modal
-        deleteModalCloseBtns.forEach(btn => {
-            btn.addEventListener('click', function () {
-                deleteModal.style.display = 'none';
-            });
-        });
-
-        // Close modal when clicking outside
-        window.addEventListener('click', function (event) {
-            if (event.target == deleteModal) {
-                deleteModal.style.display = 'none';
-            }
-        });
-      });
-    </script>
+   
 </head>
 <body>
     <?php include("header.php") ?>

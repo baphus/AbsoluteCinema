@@ -4,6 +4,57 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles/modal.css">
 </head>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const addModal = document.getElementById('addModal');
+      const addMovieBtn = document.getElementById('add-movie-btn');
+      const addModalCloseBtn = document.querySelector('#addModal .close-btn');
+      
+      addMovieBtn.addEventListener('click', function () {
+          addModal.style.display = 'block';
+      });
+
+      addModalCloseBtn.addEventListener('click', function () {
+          addModal.style.display = 'none';
+      });
+
+      window.addEventListener('click', function (event) {
+          if (event.target == addModal) {
+              addModal.style.display = 'none';
+          }
+      });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const deleteModal = document.getElementById('deleteModal');
+      const deleteModalCloseBtns = document.querySelectorAll('#deleteModal .close-btn');
+
+      // Open the delete modal
+      window.openDeleteModal = function (movieId) {
+          document.getElementById('delete_movie_id').value = movieId;
+          deleteModal.style.display = 'block';
+      };
+
+      // Close the delete modal
+      deleteModalCloseBtns.forEach(btn => {
+          btn.addEventListener('click', function () {
+              deleteModal.style.display = 'none';
+          });
+      });
+
+      // Close modal when clicking outside the modal content
+      window.addEventListener('click', function (event) {
+          if (event.target == deleteModal) {
+              deleteModal.style.display = 'none';
+          }
+      });
+
+      // Close modal when clicking cancel button
+      window.closeDeleteModal = function () {
+          deleteModal.style.display = 'none';
+      };
+    });
+  </script>
 <body>
    <div id="addModal" class="modal">
     <div class="modal-content">
@@ -138,12 +189,11 @@
         <div class="modal-footer">
             <form method="POST" action="movies.php">
                 <input type="hidden" id="delete_movie_id" name="movie_id">
-                <button type="submit" name="delete_movie" class="btn btn-danger">Delete</button>
-                <button type="button" class="btn btn-secondary close-btn">Cancel</button>
+                <button type="submit" name="delete_movie" class="delete-btn">Delete</button>
+                <button type="button" class="cancel-btn" onclick="closeDeleteModal()">Cancel</button>
             </form>
         </div>
     </div>
 </div>
 </body>
 </html>
-   

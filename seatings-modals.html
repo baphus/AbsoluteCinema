@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="styles/modal.css">
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const editModal = document.getElementById('editModal');
+            const editModalCloseBtn = document.querySelector('#editModal .close-btn');
+
+            // Make openEditModal available globally
+            window.openEditModal = function (seat_id, screen_id, row_label, seat_number, status) {
+                document.getElementById('edit_seat_id').value = seat_id;
+                document.getElementById('display_screen_id').textContent = screen_id;
+                document.getElementById('display_row_label').textContent = row_label;
+                document.getElementById('display_seat_number').textContent = seat_number;
+                document.getElementById('edit_status').value = status;
+                editModal.style.display = 'block';
+            };
+
+            // Close modal when clicking the close button
+            editModalCloseBtn.addEventListener('click', function () {
+                editModal.style.display = 'none';
+            });
+
+            // Close modal when clicking outside
+            window.addEventListener('click', function (event) {
+                if (event.target === editModal) {
+                    editModal.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <!-- Edit Seating Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Update Seat Status</h3>
+                <span class="close-btn">&times;</span>
+            </div>
+            <form method="POST" action="seatings.php">
+                <input type="hidden" id="edit_seat_id" name="seat_id">
+                <div class="form-group">
+                    <label>Screen ID:</label>
+                    <span id="display_screen_id" class="display-only"></span>
+                </div>
+                <div class="form-group">
+                    <label>Row Label:</label>
+                    <span id="display_row_label" class="display-only"></span>
+                </div>
+                <div class="form-group">
+                    <label>Seat Number:</label>
+                    <span id="display_seat_number" class="display-only"></span>
+                </div>
+                <div class="form-group">
+                    <label for="edit_status">Status</label>
+                    <select id="edit_status" name="status" required>
+                        <option value="available">Available</option>
+                        <option value="occupied">Occupied</option>
+                        <option value="maintenance">Maintenance</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" name="update_seating" class="btn">Update Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -58,7 +58,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_movie'])) {
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     $stmt = mysqli_prepare($conn, $insertQuery);
-    mysqli_stmt_bind_param($stmt, "ssissssssss", 
+    mysqli_stmt_bind_param($stmt, "ssisssssssss", 
                            $movie_id, $title, $genre, $duration, $rating, $description, 
                            $director, $release_date, $date_added, $status, $poster, $banner);
 
@@ -121,52 +121,6 @@ if (!$result) {
     <title>Admin Dashboard - Absolute Cinema</title>
     <link rel="stylesheet" href="/styles/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        const addModal = document.getElementById('addModal');
-        const addMovieBtn = document.getElementById('add-movie-btn');
-        const addModalCloseBtn = document.querySelector('#addModal .close-btn');
-
-        addMovieBtn.addEventListener('click', function () {
-            addModal.style.display = 'block';
-        });
-
-        addModalCloseBtn.addEventListener('click', function () {
-            addModal.style.display = 'none';
-        });
-
-        window.addEventListener('click', function (event) {
-            if (event.target == addModal) {
-                addModal.style.display = 'none';
-            }
-        });
-      });
-
-      document.addEventListener('DOMContentLoaded', function () {
-        const deleteModal = document.getElementById('deleteModal');
-        const deleteModalCloseBtns = document.querySelectorAll('#deleteModal .close-btn');
-
-        // Open the delete modal
-        window.openDeleteModal = function (movieId) {
-            document.getElementById('delete_movie_id').value = movieId;
-            deleteModal.style.display = 'block';
-        };
-
-        // Close the delete modal
-        deleteModalCloseBtns.forEach(btn => {
-            btn.addEventListener('click', function () {
-                deleteModal.style.display = 'none';
-            });
-        });
-
-        // Close modal when clicking outside the modal content
-        window.addEventListener('click', function (event) {
-            if (event.target == deleteModal) {
-                deleteModal.style.display = 'none';
-            }
-        });
-      });
-    </script>
   </head>
   <body>
     <?php include("header.php") ?>
