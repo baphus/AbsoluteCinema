@@ -1,6 +1,5 @@
 <?php
 session_start();
-
 include("config.php");
 
 // Check if the user is logged in and has the "admin" role
@@ -63,9 +62,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_movie'])) {
                            $director, $release_date, $date_added, $status, $poster, $banner);
 
     if (mysqli_stmt_execute($stmt)) {
-        $success_message = "Movie added successfully!";
+        echo "Movie added successfully!";
     } else {
-        $error_message = "Error adding movie: " . mysqli_error($conn);
+        echo "Error adding movie";
     }
 
     mysqli_stmt_close($stmt);
@@ -80,9 +79,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_movie'])) {
   mysqli_stmt_bind_param($stmt, "s", $movie_id);
 
   if (mysqli_stmt_execute($stmt)) {
-      $success_message = "Movie deleted successfully!";
+      echo "Movie deleted successfully";
   } else {
-      $error_message = "Error deleting movie: " . mysqli_error($conn);
+      echo "Error deleting movie";
   }
 
   mysqli_stmt_close($stmt);
@@ -121,6 +120,7 @@ if (!$result) {
     <title>Admin Dashboard - Absolute Cinema</title>
     <link rel="stylesheet" href="/styles/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
   </head>
   <body>
     <?php include("header.php") ?>

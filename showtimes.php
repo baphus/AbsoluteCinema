@@ -73,6 +73,22 @@ while ($showtime = mysqli_fetch_assoc($result)) {
 if (!$result) {
     die("Query failed: " . mysqli_error($conn));
 }
+
+// Fetch all movies
+$getMoviesQuery = "SELECT title FROM movies WHERE status = 'SHOWING' ORDER BY title ASC";
+$moviesResult = mysqli_query($conn, $getMoviesQuery);
+$movies = [];
+while ($movie = mysqli_fetch_assoc($moviesResult)) {
+    $movies[] = $movie;
+}
+
+// Fetch all screens
+$getScreensQuery = "SELECT screen_name FROM screens WHERE status = 'Active' ORDER BY screen_name ASC";
+$screensResult = mysqli_query($conn, $getScreensQuery);
+$screens = [];
+while ($screen = mysqli_fetch_assoc($screensResult)) {
+    $screens[] = $screen;
+}
 ?>
 
 <!DOCTYPE html>
@@ -110,14 +126,14 @@ if (!$result) {
         const editModalCloseBtn = document.querySelector('#editModal .close-btn');
 
         window.openEditModal = function (showtime_id, movie_title, screen, date, time, price, status) {
-          document.getElementById('edit_showtime_id').value = showtime_id;
-          document.getElementById('edit_movie_title').value = movie_title;
-          document.getElementById('edit_screen').value = screen;
-          document.getElementById('edit_date').value = date;
-          document.getElementById('edit_time').value = time;
-          document.getElementById('edit_price').value = price;
-          document.getElementById('edit_status').value = status;
-          editModal.style.display = 'block';
+            document.getElementById('edit_showtime_id').value = showtime_id;
+            document.getElementById('edit_movie_title').value = movie_title; // This will select the correct option
+            document.getElementById('edit_screen').value = screen; // This will select the correct option
+            document.getElementById('edit_date').value = date;
+            document.getElementById('edit_time').value = time;
+            document.getElementById('edit_price').value = price;
+            document.getElementById('edit_status').value = status;
+            editModal.style.display = 'block';
         };
 
         editModalCloseBtn.addEventListener('click', function () {
@@ -146,8 +162,8 @@ if (!$result) {
                     </button>
                 </div>
 
-                <div class="table">
-                    <table>
+                <div class="table-container">
+                    <table class="table">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -201,11 +217,25 @@ if (!$result) {
             <form method="POST" action="showtimes.php">
                 <div class="form-group">
                     <label for="movie_title">Movie Title</label>
-                    <input type="text" id="movie_title" name="movie_title" required>
+                    <select id="movie_title" name="movie_title" required>
+                        <option value="">Select a movie</option>
+                        <?php foreach ($movies as $movie): ?>
+                            <option value="<?php echo htmlspecialchars($movie['title']); ?>">
+                                <?php echo htmlspecialchars($movie['title']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="screen">Screen</label>
-                    <input type="text" id="screen" name="screen" required>
+                    <select id="screen" name="screen" required>
+                        <option value="">Select a screen</option>
+                        <?php foreach ($screens as $screen): ?>
+                            <option value="<?php echo htmlspecialchars($screen['screen_name']); ?>">
+                                <?php echo htmlspecialchars($screen['screen_name']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="date">Date</label>
@@ -244,11 +274,25 @@ if (!$result) {
                 <input type="hidden" id="edit_showtime_id" name="showtime_id">
                 <div class="form-group">
                     <label for="edit_movie_title">Movie Title</label>
-                    <input type="text" id="edit_movie_title" name="movie_title" required>
+                    <select id="edit_movie_title" name="movie_title" required>
+                        <option value="">Select a movie</option>
+                        <?php foreach ($movies as $movie): ?>
+                            <option value="<?php echo htmlspecialchars($movie['title']); ?>">
+                                <?php echo htmlspecialchars($movie['title']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="edit_screen">Screen</label>
-                    <input type="text" id="edit_screen" name="screen" required>
+                    <select id="edit_screen" name="screen" required>
+                        <option value="">Select a screen</option>
+                        <?php foreach ($screens as $screen): ?>
+                            <option value="<?php echo htmlspecialchars($screen['screen_name']); ?>">
+                                <?php echo htmlspecialchars($screen['screen_name']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="edit_date">Date</label>

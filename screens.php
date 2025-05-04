@@ -175,8 +175,8 @@ if (!$result) {
                     </button>
                 </div>
 
-                <div class="table">
-                    <table>
+                <div class="table-container">
+                    <table class="table">
                         <thead>
                             <tr>
                                 <th>ID</th>

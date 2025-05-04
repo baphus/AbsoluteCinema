@@ -73,6 +73,11 @@
                   deleteModal.style.display = 'none';
               }
           });
+
+                // Close modal when clicking cancel button
+            window.closeDeleteModal = function () {
+                deleteModal.style.display = 'none';
+            };
         });
       </script>
 </head>
@@ -176,8 +181,8 @@
         <div class="modal-footer">
             <form method="POST" action="delete_screen.php">
                 <input type="hidden" id="delete_screen_id" name="screen_id">
-                <button type="submit" name="delete_screen" class="btn btn-danger">Delete</button>
-                <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
+                <button type="submit" name="delete_screen" class="delete-btn">Delete</button>
+                <button type="button" class="cancel-btn" onclick="closeDeleteModal()">Cancel</button>
             </form>
         </div>
     </div>

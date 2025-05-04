@@ -43,8 +43,8 @@ while ($user = mysqli_fetch_assoc($result)) {
                     <h2> User Management </h2>
                 </div>
 
-                <div class="table">
-                    <table>
+                <div class="table-container">
+                    <table class="table">
                         <thead>
                             <tr>
                                 <th>ID</th>

@@ -115,8 +115,8 @@ if (!$result) {
                     <h2>Booking Management</h2>
                 </div>
 
-                <div class="table">
-                    <table>
+                <div class="table-container">
+                    <table class="table">
                         <thead>
                             <tr>
                                 <th>ID</th>
