@@ -252,5 +252,5 @@ if (!$result) {
       </main>
     </div>
   </body>
-  <?php include("modals.html")?>
+  <?php include("movie-modals.html")?>
 </html>

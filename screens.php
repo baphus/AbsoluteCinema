@@ -24,20 +24,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_screen'])) {
 
     if (mysqli_stmt_execute($stmt)) {
         $screen_id = mysqli_insert_id($conn); // Get the ID of the newly created screen
-
+    
         // Automatically create 9 seats for the new screen
         $rows = ['A', 'B', 'C']; // Example row labels
-
+    
         foreach ($rows as $row_label) {
             for ($i = 1; $i <= 3; $i++) { // Create 3 seats per row
-                $seat_id = uniqid("seat_"); // Generate a unique seat_id
+                // Generate a unique seat_id using screen_id, row, and seat number
+                $seat_id = "SEAT_{$screen_id}_{$row_label}_{$i}";
                 $seatQuery = "INSERT INTO seats (seat_id, screen_id, row_label, seat_number, status) VALUES (?, ?, ?, ?, 'available')";
                 $seatStmt = mysqli_prepare($conn, $seatQuery);
-                mysqli_stmt_bind_param($seatStmt, "sisi", $seat_id, $screen_id, $row_label, $i); // Use $i for unique seat_number per row
+                mysqli_stmt_bind_param($seatStmt, "sisi", $seat_id, $screen_id, $row_label, $i);
                 mysqli_stmt_execute($seatStmt);
+                mysqli_stmt_close($seatStmt);
             }
         }
-
+    
         $success_message = "Screen and its 9 seats added successfully!";
     } else {
         $error_message = "Error adding screen: " . mysqli_error($conn);
@@ -75,9 +77,9 @@ $getScreensQuery = "SELECT * FROM screens ORDER BY screen_id ASC";
 $result = mysqli_query($conn, $getScreensQuery);
 
 $screens = [];
-    while($screen = mysqli_fetch_assoc($result) > 0 ){
-        $screens[] = $screen;
-    }
+while ($screen = mysqli_fetch_assoc($result)) {
+    $screens[] = $screen;
+}
 
 if (!$result) {
     die("Query failed: " . mysqli_error($conn));
@@ -91,7 +93,6 @@ if (!$result) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Screens</title>
     <link rel="stylesheet" href="/styles/dashboard.css">
-    <link rel="stylesheet" href="/styles/modal.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script>
       document.addEventListener('DOMContentLoaded', function () {
@@ -137,6 +138,29 @@ if (!$result) {
           if (event.target == editModal) {
             editModal.style.display = 'none';
           }
+        });
+
+        // Delete Screen Modal
+        const deleteModal = document.getElementById('deleteModal');
+        const deleteModalCloseBtns = document.querySelectorAll('#deleteModal .close-btn');
+
+        window.openDeleteModal = function (screenId) {
+            document.getElementById('delete_screen_id').value = screenId;
+            deleteModal.style.display = 'block';
+        };
+
+        // Close delete modal
+        deleteModalCloseBtns.forEach(btn => {
+            btn.addEventListener('click', function () {
+                deleteModal.style.display = 'none';
+            });
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function (event) {
+            if (event.target == deleteModal) {
+                deleteModal.style.display = 'none';
+            }
         });
       });
     </script>
@@ -184,7 +208,7 @@ if (!$result) {
                                             <button class="btn-icon btn-edit" onclick="openEditModal('<?php echo $screen['screen_id']; ?>', '<?php echo $screen['screen_name']; ?>', '<?php echo $screen['capacity']; ?>', '<?php echo $screen['screen_type']; ?>', '<?php echo $screen['audio_system']; ?>', '<?php echo $screen['status']; ?>', '<?php echo $screen['notes']; ?>')">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <button class="btn-icon btn-delete" onclick="if(confirm('Are you sure you want to delete this screen?')) window.location.href='delete_screen.php?id=<?php echo $screen['screen_id']; ?>';">
+                                            <button class="btn-icon btn-delete" onclick="openDeleteModal('<?php echo $screen['screen_id']; ?>')">
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
                                         </td>
@@ -201,90 +225,6 @@ if (!$result) {
             </div>
         </main>
     </div>
-
-    <!-- Add Screen Modal -->
-    <div id="addModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Add Screen</h3>
-                <span class="close-btn">&times;</span>
-            </div>
-            <form method="POST" action="screens.php">
-                <div class="form-group">
-                    <label for="screen_name">Screen Name</label>
-                    <input type="text" id="screen_name" name="screen_name" required>
-                </div>
-                <div class="form-group">
-                    <label for="capacity">Capacity</label>
-                    <input type="number" id="capacity" name="capacity" required>
-                </div>
-                <div class="form-group">
-                    <label for="screen_type">Screen Type</label>
-                    <input type="text" id="screen_type" name="screen_type" required>
-                </div>
-                <div class="form-group">
-                    <label for="audio_system">Audio System</label>
-                    <input type="text" id="audio_system" name="audio_system" required>
-                </div>
-                <div class="form-group">
-                    <label for="status">Status</label>
-                    <select id="status" name="status" required>
-                        <option value="Available">Available</option>
-                        <option value="Unavailable">Unavailable</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="notes">Notes</label>
-                    <textarea id="notes" name="notes"></textarea>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" name="add_screen" class="btn">Add Screen</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Edit Screen Modal -->
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Edit Screen</h3>
-                <span class="close-btn">&times;</span>
-            </div>
-            <form method="POST" action="screens.php">
-                <input type="hidden" id="edit_screen_id" name="screen_id">
-                <div class="form-group">
-                    <label for="edit_screen_name">Screen Name</label>
-                    <input type="text" id="edit_screen_name" name="screen_name" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit_capacity">Capacity</label>
-                    <input type="number" id="edit_capacity" name="capacity" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit_screen_type">Screen Type</label>
-                    <input type="text" id="edit_screen_type" name="screen_type" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit_audio_system">Audio System</label>
-                    <input type="text" id="edit_audio_system" name="audio_system" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit_status">Status</label>
-                    <select id="edit_status" name="status" required>
-                        <option value="Available">Available</option>
-                        <option value="Unavailable">Unavailable</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="edit_notes">Notes</label>
-                    <textarea id="edit_notes" name="notes"></textarea>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" name="update_screen" class="btn">Save Changes</button>
-                </div>
-            </form>
-        </div>
-    </div>
 </body>
+    <?php include("screens-modals.html")?>
 </html>
