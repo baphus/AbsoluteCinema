@@ -100,126 +100,6 @@ nav a:last-child {
     color: #1a2f38;
 }
 
-.date-label, .time-label {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 10px;
-    display: block;
-}
-
-.date-options, .time-options {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.date-option, .time-option {
-    background-color: #1a2f38;
-    color: white;
-    border: none;
-    padding: 12px 25px;
-    border-radius: 30px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all ease 0.3s;
-}
-
-.date-option:hover {
-    background-color: #ff3b3b;
-}
-
-.tickets-label {
-    font-weight: 600;
-    margin-bottom: 10px;
-    display: block;
-}
-
-.tickets-select {
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-    width: 100px;
-    margin-bottom: 20px;
-}
-
-.seats-label {
-    font-weight: 600;
-    margin-bottom: 10px;
-    display: block;
-}
-
-.seat-selector {
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-    width: 100%;
-    margin-bottom: 20px;
-    background-color: #1a2f38;
-    color: white;
-    position: relative;
-}
-
-.seat-selector::after {
-    content: "▼";
-    position: absolute;
-    right: 10px;
-    top: 10px;
-}
-
-.screen {
-    background-color: #1a2f38;
-    border-radius: 5px;
-    height: 120px;
-    margin-bottom: 20px;
-    display: flex;
-    flex-wrap: wrap;
-    padding: 15px;
-    gap: 5px;
-    align-content: flex-start;
-}
-
-.seat {
-    background-color: #ff3b3b;
-    color: white;
-    width: 35px;
-    height: 35px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 5px;
-    font-size: 0.8rem;
-    cursor: pointer;
-}
-
-.seat-info {
-    background-color: #ff3b3b;
-    color: white;
-    padding: 15px;
-    border-radius: 5px;
-}
-
-.seat-info-title {
-    font-weight: 600;
-    margin-bottom: 10px;
-}
-
-.seat-info ul {
-    list-style-type: none;
-    margin-left: 5px;
-}
-
-.seat-info li {
-    margin-bottom: 5px;
-    display: flex;
-    align-items: center;
-}
-
-.seat-info li::before {
-    content: "•";
-    margin-right: 5px;
-}
-
 .booking-summary {
     background-color: #bae1f2;
     border-radius: 10px;
@@ -280,6 +160,46 @@ nav a:last-child {
     margin: 20px 0;
 }
 
+.seats-selection {
+    margin-bottom: 20px;
+}
+
+.seats-selection p {
+    margin-bottom: 5px;
+}
+
+.price-breakdown {
+    margin-bottom: 20px;
+}
+
+.price-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.price-total {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 700;
+    margin-top: 10px;
+}
+
+.payment-button {
+    background-color: #ff3b3b;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+    font-size: 1rem;
+    text-decoration: none;
+    display: inline-block;
+}
+
 #seat-layout {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
@@ -335,6 +255,30 @@ nav a:last-child {
     color: white;
     cursor: not-allowed;
 }
+.seat label.occupied {
+    background-color: #f44336; /* Red color for occupied seats */
+    color: white;
+    cursor: not-allowed;
+}
+
+.seat input[type="checkbox"]:disabled + label {
+    background-color: #282c34; /* Ensure disabled seats are red */
+    color: white;
+    cursor: not-allowed;
+}
+
+#seat-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+    gap: 10px;
+    justify-content: center;
+    margin-top: 40px; /* Increased margin to account for the "SCREEN" label */
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
 
 #seat-layout::before {
     content: "SCREEN";
@@ -343,5 +287,62 @@ nav a:last-child {
     font-size: 18px;
     font-weight: bold;
     margin-bottom: 10px;
+    color: #ffffff;
+    position: absolute;
+    top: -30px; 
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #282c34;
+    padding: 5px 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+}
+
+/* General dropdown styling */
+select {
+    margin-top: 8px;
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    font-weight: 500;
     color: #333;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    appearance: none; /* Remove default browser styling */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+select:hover {
+    background-color: #e6e6e6;
+    border-color: #ccc;
+}
+
+select:focus {
+    border-color: #3a93c0;
+    box-shadow: 0 0 5px rgba(58, 147, 192, 0.5);
+}
+
+/* Add a custom arrow for the dropdown */
+select::after {
+    content: "▼";
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-size: 12px;
+    color: #333;
+}
+
+/* Styling for dropdown options */
+option {
+    font-size: 16px;
+    color: #333;
+    background-color: #fff;
+    padding: 10px;
 }
