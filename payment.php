@@ -7,144 +7,97 @@ if (!isset($_SESSION['user_id'])) {
     error_log("User ID not set in session. Redirecting to login.");
     header("Location: login.php");
     exit;
-} else {
-    $userID = $_SESSION['user_id'];
-    error_log("User ID: $userID");
 }
 
-// Check if booking_id is set in the session
-if (!isset($_SESSION['booking_id'])) {
-    error_log("No booking ID in session. Redirecting to index.");
+$userID = $_SESSION['user_id'];
+
+if (!isset($_GET['booking_id']) || empty($_GET['booking_id'])) {
+    error_log("No booking ID in URL. Redirecting to index.");
     header("Location: index.php");
     exit;
 }
 
-$booking_id = $_SESSION['booking_id'];
-$total_price = isset($_SESSION['total_price']) ? $_SESSION['total_price'] : 0;
+$booking_id = $_GET['booking_id'];
 
-// Fetch booking details
-$bookingQuery = "
-    SELECT b.*, s.show_date, s.start_time, m.title, m.poster, m.duration, m.rating, scr.screen_name
-    FROM bookings b
-    JOIN showtimes s ON b.showtime_id = s.showtime_id
-    JOIN movies m ON s.movie_id = m.movie_id
-    JOIN screens scr ON s.screen_id = scr.screen_id
-    WHERE b.booking_id = ? AND b.user_id = ?";
-$stmt = mysqli_prepare($conn, $bookingQuery);
-mysqli_stmt_bind_param($stmt, "ss", $booking_id, $userID);
-mysqli_stmt_execute($stmt);
-$result = mysqli_stmt_get_result($stmt);
-
-if (!$result || mysqli_num_rows($result) === 0) {
-    error_log("Booking not found for ID: $booking_id and User ID: $userID");
-    header("Location: index.php");
-    exit;
-}
-
-$booking = mysqli_fetch_assoc($result);
-
-// Fetch user information
+// Fetch user details
 $userQuery = "SELECT * FROM users WHERE user_id = ?";
 $stmt = mysqli_prepare($conn, $userQuery);
 mysqli_stmt_bind_param($stmt, "s", $userID);
 mysqli_stmt_execute($stmt);
 $userResult = mysqli_stmt_get_result($stmt);
-$user = mysqli_fetch_assoc($userResult);
 
-// Fetch selected seats
-$seatsQuery = "
-    SELECT s.row_label, s.seat_number
-    FROM booking_seats bs
-    JOIN seats s ON bs.seat_id = s.seat_id
-    WHERE bs.booking_id = ?
-    ORDER BY s.row_label, s.seat_number";
-$stmt = mysqli_prepare($conn, $seatsQuery);
+if ($userResult && mysqli_num_rows($userResult) > 0) {
+    $user = mysqli_fetch_assoc($userResult);
+} else {
+    error_log("User not found for ID: $userID");
+    header("Location: login.php");
+    exit;
+}
+
+// User details
+$cardholder_name = $user['first_name'] . ' ' . $user['last_name'];
+$billing_first_name = $user['first_name'];
+$billing_last_name = $user['last_name'];
+$billing_email = $user['email'];
+
+// Step 1: Get the show_date for the current booking
+$showDateQuery = "
+    SELECT s.show_date
+    FROM bookings b
+    JOIN showtimes s ON b.showtime_id = s.showtime_id
+    WHERE b.booking_id = ?
+";
+$stmt = mysqli_prepare($conn, $showDateQuery);
 mysqli_stmt_bind_param($stmt, "s", $booking_id);
 mysqli_stmt_execute($stmt);
-$seatsResult = mysqli_stmt_get_result($stmt);
+$showDateResult = mysqli_stmt_get_result($stmt);
 
+if (!$showDateResult || mysqli_num_rows($showDateResult) === 0) {
+    error_log("Show date not found for booking_id: $booking_id");
+    header("Location: index.php");
+    exit;
+}
+
+$row = mysqli_fetch_assoc($showDateResult);
+$target_show_date = $row['show_date'];
+
+// Step 2: Fetch all bookings for the user on that show_date
+$bookingQuery = "
+    SELECT b.*, s1.show_date, s1.start_time, m.title, m.poster, m.duration, m.rating, scr.screen_name, s2.seat_number, s2.row_label
+    FROM bookings b
+    JOIN showtimes s1 ON b.showtime_id = s1.showtime_id
+    JOIN movies m ON s1.movie_id = m.movie_id
+    JOIN screens scr ON s1.screen_id = scr.screen_id
+    JOIN seats s2 ON b.seat_id = s2.seat_id
+    WHERE b.user_id = ? AND s1.show_date = ?
+    ORDER BY s1.start_time, scr.screen_name
+";
+$stmt = mysqli_prepare($conn, $bookingQuery);
+mysqli_stmt_bind_param($stmt, "ss", $userID, $target_show_date);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+
+// Collect seat info and use the first row for display
 $seats = [];
-while ($seat = mysqli_fetch_assoc($seatsResult)) {
-    $seats[] = $seat['row_label'] . $seat['seat_number'];
-}
-$seatsString = implode(', ', $seats);
-$ticket_count = count($seats);
+$displayData = null;
 
-// Calculate breakdown
-$ticket_price_per_seat = 200; // Base ticket price
-$booking_fee = 50; // Fixed booking fee
-$tax_rate = 0.12; // 12% tax
-$subtotal = $ticket_price_per_seat * $ticket_count;
-$tax = $subtotal * $tax_rate;
-$total = $subtotal + $booking_fee + $tax;
+if ($result && mysqli_num_rows($result) > 0) {
+    while ($booking = mysqli_fetch_assoc($result)) {
+        $seats[] = $booking['row_label'] . $booking['seat_number'];
 
-// Process payment submission - simplified to just create a payment record
-$payment_success = false;
-$payment_error = "";
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_payment'])) {
-    // Start transaction
-    mysqli_begin_transaction($conn);
-    
-    try {
-        // Update booking status to 'confirmed'
-        $updateBookingQuery = "UPDATE bookings SET status = 'confirmed', total_price = ? WHERE booking_id = ?";
-        $stmt = mysqli_prepare($conn, $updateBookingQuery);
-        mysqli_stmt_bind_param($stmt, "ds", $total, $booking_id);
-        mysqli_stmt_execute($stmt);
-        
-        // Create a payment record with static data
-        $payment_id = 'PAY' . time() . rand(1000, 9999);
-        $card_number = '4111111111111111'; // Example static card number
-        $cardholder_name = $user['first_name'] . ' ' . $user['last_name'];
-        $expiry_date = '12/28';
-        $cvv = '123';
-        $billing_first_name = $user['first_name'];
-        $billing_last_name = $user['last_name'];
-        $billing_email = $user['email'];
-        $billing_address = '123 Main St';
-        $billing_city = 'Metro Manila';
-        $billing_zip_code = '1000';
-        $billing_country = 'Philippines';
-        $status = 'Paid';
-        
-        // Insert payment record
-        $insertPaymentQuery = "
-            INSERT INTO payments (
-                payment_id, booking_id, card_number, cardholder_name, expiry_date, cvv,
-                billing_first_name, billing_last_name, billing_email, billing_address,
-                billing_city, billing_zip_code, billing_country, amount_paid, payment_date, status
-            ) VALUES (
-                ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?,
-                ?, ?, ?, ?, NOW(), ?
-            )";
-        
-        $stmt = mysqli_prepare($conn, $insertPaymentQuery);
-        mysqli_stmt_bind_param($stmt, "ssssssssssssds", 
-            $payment_id, $booking_id, $card_number, $cardholder_name, $expiry_date, $cvv,
-            $billing_first_name, $billing_last_name, $billing_email, $billing_address,
-            $billing_city, $billing_zip_code, $billing_country, $total, $status
-        );
-        mysqli_stmt_execute($stmt);
-        
-        // Commit transaction
-        mysqli_commit($conn);
-        
-        // Set success flag and redirect
-        $payment_success = true;
-        
-        // Redirect to confirmation page
-        header("Location: ticket.php?booking_id=$booking_id");
-        exit;
-        
-    } catch (Exception $e) {
-        // Rollback transaction on error
-        mysqli_rollback($conn);
-        error_log("Payment processing failed: " . $e->getMessage());
-        $payment_error = "There was an error processing your payment: " . $e->getMessage();
+        // Use the first booking row to extract movie/showtime data
+        if ($displayData === null) {
+            $displayData = $booking;
+        }
     }
+
+    $seat_display = implode(', ', $seats);
+} else {
+    error_log("No bookings found for User ID: $userID on show date: $target_show_date");
+    header("Location: index.php");
+    exit;
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -273,20 +226,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_payment'])) {
         <h1 class="payment-title">Payment</h1>
         <p class="payment-subtitle">Complete your booking by making payment</p>
         
-        <?php if ($payment_error): ?>
-            <div class="error-message"><?php echo htmlspecialchars($payment_error); ?></div>
-        <?php endif; ?>
-        
-        <?php if ($payment_success): ?>
-            <div class="success-message">Payment successful! Redirecting to your tickets...</div>
-        <?php else: ?>
-
         <form method="POST" action="payment.php" id="paymentForm">
             <div class="payment-grid">
                 <div class="payment-notice">
                     <h2>Simplified Payment Process</h2>
-                    <p>This is a demonstration payment page. Click the "Pay Now" button to create a booking with static payment information.</p>
-                    <p>No payment validation will be performed. This will create a booking record with "confirmed" status and generate a payment record in the database.</p>
+                    <p>This is a demonstration payment page. Click the "Pay Now" button to simulate a booking with static payment information.</p>
+                    <p>No payment validation will be performed. This will just display a confirmation of your booking.</p>
                 </div>
                 
                 <div class="order-summary">
@@ -300,36 +245,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_payment'])) {
                             <p><?php echo htmlspecialchars($booking['rating']); ?> | <?php echo htmlspecialchars($booking['duration']); ?> mins</p>
                             <p><?php echo date('F d', strtotime($booking['show_date'])); ?>, <?php echo date('h:i A', strtotime($booking['start_time'])); ?></p>
                             <p>Screen: <?php echo htmlspecialchars($booking['screen_name']); ?></p>
-                            <p>Seats: <?php echo htmlspecialchars($seatsString); ?></p>
+                            <p>Seats: <?php echo htmlspecialchars($seat_display); ?></p> <!-- Multiple seats -->
                         </div>
-                    </div>
                     
                     <div class="price-breakdown">
                         <div class="price-row">
-                            <span>Ticket (<?php echo $ticket_count; ?>)</span>
-                            <span>₱<?php echo number_format($subtotal, 2); ?></span>
-                        </div>
-                        <div class="price-row">
-                            <span>Booking Fee</span>
-                            <span>₱<?php echo number_format($booking_fee, 2); ?></span>
-                        </div>
-                        <div class="price-row">
-                            <span>Tax (12%)</span>
-                            <span>₱<?php echo number_format($tax, 2); ?></span>
+                            <span>Ticket</span>
+                            <span>₱100.00</span>
                         </div>
                         <div class="price-row total">
                             <span>Total</span>
-                            <span>₱<?php echo number_format($total, 2); ?></span>
+                            <span>₱100.00</span>
                         </div>
                     </div>
                     
-                    <button type="submit" name="submit_payment" class="pay-button">Pay ₱<?php echo number_format($total, 2); ?></button>
+                    <button type="submit" name="submit_payment" class="pay-button">Pay ₱100.00</button>
                 </div>
             </div>
         </form>
-        <?php endif; ?>
     </main>
     
     <?php include("footer.php");?>
 </body>
+</html>
 </html>

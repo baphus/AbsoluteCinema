@@ -183,11 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_booking'])) {
             mysqli_commit($conn);
             echo("All seats booked and transaction committed.");
 
-            // For simplicity, store the first booking ID and total price for payment
-            $_SESSION['booking_id'] = $escaped_booking_id; // Note: last booking ID
-            $_SESSION['total_price'] = $total_price;
-
-            header("Location: payment.php");
+            header("Location: payment.php?booking_id=" . urlencode($escaped_booking_id));
             exit;
 
         } catch (Exception $e) {
@@ -415,30 +411,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_booking'])) {
         }
     });
 
-    // Add event listeners to seat checkboxes
+    // Add listener to all checkboxes and ticket count input
     seatCheckboxes.forEach(checkbox => {
-        if (!checkbox.hasAttribute('data-occupied')) { // Only add listener to available seats
-            checkbox.addEventListener('change', enforceTicketLimit);
-        }
-    });
-
-    // Add event listener to ticket count input
-    if (ticketCountInput) {
-        ticketCountInput.addEventListener('input', function() {
-            // Reset all checkboxes when ticket count changes
-            seatCheckboxes.forEach(checkbox => {
-                if (!checkbox.hasAttribute('data-occupied')) {
-                    checkbox.checked = false;
-                    checkbox.disabled = false;
-                }
-            });
+        checkbox.addEventListener('change', () => {
+            enforceTicketLimit();
             updateSelectedSeats();
         });
-    }
-
-    // Initialize the seat selection and summary
-    if (seatCheckboxes.length > 0) {
+    });
+    ticketCountInput.addEventListener('input', () => {
         enforceTicketLimit();
+        updateSelectedSeats();
+    });
+
+    // Revised enforceTicketLimit
+    function enforceTicketLimit() {
+        const ticketCount = parseInt(ticketCountInput.value, 10) || 1;
+        const selectedCheckboxes = Array.from(seatCheckboxes).filter(cb => cb.checked);
+        const selectedCount = selectedCheckboxes.length;
+
+        seatCheckboxes.forEach(cb => {
+            const isOccupied = cb.disabled && !cb.checked; // don't un-disable occupied ones
+            if (!cb.checked && !isOccupied) {
+                cb.disabled = selectedCount >= ticketCount;
+            } else if (!isOccupied) {
+                cb.disabled = false;
+            }
+        });
+
+        if (continueButton) {
+            continueButton.disabled = selectedCount === 0;
+        }
     }
 });
     </script>

@@ -13,13 +13,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_booking'])) {
     $user_id = $_POST['user_id'];
     $showtime_id = $_POST['showtime_id'];
     $booking_date = $_POST['booking_date'];
+    $seat_id = $_POST['seat_id'];
     $total_price = $_POST['total_price'];
     $status = $_POST['status'];
 
-    $insertQuery = "INSERT INTO bookings (user_id, showtime_id, booking_date, total_price, status) 
-                    VALUES (?, ?, ?, ?, ?)";
+    $insertQuery = "INSERT INTO bookings (user_id, showtime_id, booking_date, seat_id, total_price, status) 
+                    VALUES (?, ?, ?, ?, ?, ?)";
     $stmt = mysqli_prepare($conn, $insertQuery);
-    mysqli_stmt_bind_param($stmt, "iisss", $user_id, $showtime_id, $booking_date, $total_price, $status);
+    mysqli_stmt_bind_param($stmt, "isssds", $user_id, $showtime_id, $booking_date, $seat_id, $total_price, $status);
 
     if (mysqli_stmt_execute($stmt)) {
         $_SESSION['success_message'] = "Booking added successfully!";
@@ -33,29 +34,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_booking'])) {
 // Process form submission for updating bookings
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_booking'])) {
     $booking_id = $_POST['booking_id'];
-    $user_id = $_POST['user_id'];
-    $showtime_id = $_POST['showtime_id'];
-    $booking_date = $_POST['booking_date'];
-    $total_price = $_POST['total_price'];
     $status = $_POST['status'];
 
-    $updateQuery = "UPDATE bookings SET user_id = ?, showtime_id = ?, booking_date = ?, total_price = ?, status = ? 
-                    WHERE booking_id = ?";
+    $updateQuery = "UPDATE bookings SET status = ? WHERE booking_id = ?";
     $stmt = mysqli_prepare($conn, $updateQuery);
-    mysqli_stmt_bind_param($stmt, "iisssi", $user_id, $showtime_id, $booking_date, $total_price, $status, $booking_id);
+    mysqli_stmt_bind_param($stmt, "ss", $status, $booking_id);
 
     if (mysqli_stmt_execute($stmt)) {
-        $_SESSION['success_message'] = "Booking updated successfully!";
+        $_SESSION['success_message'] = "Booking status updated successfully!";
     } else {
         $_SESSION['error_message'] = "Error updating booking: " . mysqli_error($conn);
     }
 
     mysqli_stmt_close($stmt);
-
-    // Redirect to avoid form resubmission
     header("Location: bookings.php");
     exit();
 }
+
 
 // Fetch all bookings
 $getBookingsQuery = "SELECT * FROM bookings ORDER BY booking_id ASC";
@@ -86,14 +81,10 @@ if (!$result) {
         const editModal = document.getElementById('editModal');
         const editModalCloseBtn = document.querySelector('#editModal .close-btn');
 
-        window.openEditModal = function (booking_id, user_id, showtime_id, booking_date, total_price, status) {
-          document.getElementById('edit_booking_id').value = booking_id;
-          document.getElementById('edit_user_id').value = user_id;
-          document.getElementById('edit_showtime_id').value = showtime_id;
-          document.getElementById('edit_booking_date').value = booking_date;
-          document.getElementById('edit_total_price').value = total_price;
-          document.getElementById('edit_status').value = status;
-          editModal.style.display = 'block';
+        window.openEditModal = function (booking_id, status) {
+        document.getElementById('edit_booking_id').value = booking_id;
+        document.getElementById('edit_status').value = status;
+        document.getElementById('editModal').style.display = 'block';
         };
 
         editModalCloseBtn.addEventListener('click', function () {
@@ -141,6 +132,7 @@ if (!$result) {
                                 <th>ID</th>
                                 <th>User ID</th>
                                 <th>Showtime ID</th>
+                                <th>Seat ID</th>
                                 <th>Booking Date</th>
                                 <th>Total Price</th>
                                 <th>Status</th>
@@ -154,13 +146,17 @@ if (!$result) {
                                         <td><?php echo htmlspecialchars($booking['booking_id']); ?></td>
                                         <td><?php echo htmlspecialchars($booking['user_id']); ?></td>
                                         <td><?php echo htmlspecialchars($booking['showtime_id']); ?></td>
+                                        <td><?php echo htmlspecialchars($booking['seat_id']); ?></td>
                                         <td><?php echo htmlspecialchars($booking['booking_date']); ?></td>
                                         <td>₱<?php echo htmlspecialchars(number_format($booking['total_price'], 2)); ?></td>
                                         <td><?php echo htmlspecialchars($booking['status']); ?></td>
                                         <td class="actions">
-                                            <button class="btn-icon btn-edit" onclick="openEditModal('<?php echo $booking['booking_id']; ?>', '<?php echo $booking['user_id']; ?>', '<?php echo $booking['showtime_id']; ?>', '<?php echo $booking['booking_date']; ?>', '<?php echo $booking['total_price']; ?>', '<?php echo $booking['status']; ?>')">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
+                                        <button class="btn-icon btn-edit" onclick="openEditModal(
+                                                            '<?php echo $booking['booking_id']; ?>',
+                                                            '<?php echo $booking['status']; ?>'
+                                                        )">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
                                             <button class="btn-icon btn-delete" onclick="if(confirm('Are you sure you want to delete this booking?')) window.location.href='delete_booking.php?id=<?php echo $booking['booking_id']; ?>';">
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
@@ -183,38 +179,24 @@ if (!$result) {
     <div id="editModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Edit Booking</h3>
-                <span class="close-btn">&times;</span>
+            <h3>Update Booking Status</h3>
+            <span class="close-btn">&times;</span>
             </div>
             <form method="POST" action="bookings.php">
-                <input type="hidden" id="edit_booking_id" name="booking_id">
-                <div class="form-group">
-                    <label for="edit_user_id">User ID</label>
-                    <input type="number" id="edit_user_id" name="user_id" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit_showtime_id">Showtime ID</label>
-                    <input type="number" id="edit_showtime_id" name="showtime_id" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit_booking_date">Booking Date</label>
-                    <input type="date" id="edit_booking_date" name="booking_date" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit_total_price">Total Price</label>
-                    <input type="number" id="edit_total_price" name="total_price" step="0.01" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit_status">Status</label>
-                    <select id="edit_status" name="status" required>
-                        <option value="Confirmed">Confirmed</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Cancelled">Cancelled</option>
-                    </select>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" name="update_booking" class="btn">Save Changes</button>
-                </div>
+            <input type="hidden" id="edit_booking_id" name="booking_id">
+
+            <div class="form-group">
+                <label for="edit_status">Status</label>
+                <select id="edit_status" name="status" required>
+                <option value="confirmed">Confirmed</option>
+                <option value="pending">Pending</option>
+                <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" name="update_booking" class="btn">Save Changes</button>
+            </div>
             </form>
         </div>
     </div>
