@@ -27,7 +27,7 @@ $bookingsQuery = "
         m.duration, 
         m.rating, 
         s.screen_name, 
-        bd.seat_id, 
+        s1.seat_id, 
         b.booking_date, 
         st.show_date, 
         st.start_time, 
@@ -37,11 +37,12 @@ $bookingsQuery = "
     JOIN showtimes st ON b.showtime_id = st.showtime_id
     JOIN movies m ON st.movie_id = m.movie_id
     JOIN screens s ON st.screen_id = s.screen_id
-    JOIN bookingdetails bd ON b.booking_id = bd.booking_id
-    WHERE b.user_id = ?
+	JOIN seats s1 ON b.seat_id = s1.seat_id
+    WHERE user_id = ?
     ORDER BY b.booking_date DESC";
+
 $bookingsStmt = mysqli_prepare($conn, $bookingsQuery);
-mysqli_stmt_bind_param($bookingsStmt, "i", $user_id);
+mysqli_stmt_bind_param($bookingsStmt, "s", $user_id);
 mysqli_stmt_execute($bookingsStmt);
 $bookingsResult = mysqli_stmt_get_result($bookingsStmt);
 ?>
@@ -68,7 +69,7 @@ $bookingsResult = mysqli_stmt_get_result($bookingsStmt);
                 <p>Phone: <?php echo htmlspecialchars($phone); ?></p>
                 <p>Member since: <?php echo date("F Y", strtotime($created_at)); ?></p>
             </div>
-        </div>
+        </div> 
 
         <!-- Bookings Section -->
         <div class="bookings-section">
