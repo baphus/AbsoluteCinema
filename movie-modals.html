@@ -25,7 +25,7 @@
       });
     });
 
-    function openEditModal(movie_id, title, genre, duration, rating, description, director, release_date, status) {
+    function openEditModal(movie_id, title, genre, duration, rating, description, director, release_date, trailer_url, status) {
         document.getElementById('edit_movie_id').value = movie_id;
         document.getElementById('edit_title').value = title;
         document.getElementById('edit_genre').value = genre;
@@ -34,6 +34,7 @@
         document.getElementById('edit_description').value = description;
         document.getElementById('edit_director').value = director;
         document.getElementById('edit_release_date').value = release_date;
+        document.getElementById('edit_trailer_url').value = trailer_url;
         document.getElementById('edit_status').value = status;
 
         document.getElementById('editMovieModal').style.display = 'block';
@@ -87,55 +88,59 @@
         <div class="modal-header">
             <h3>Add Movie</h3>
             <span class="close-btn">&times;</span>
-        </div>
-        <form method="POST" action="movies.php" enctype="multipart/form-data">
-            <div class="form-group">
-                <label for="title">Title</label>
-                <input type="text" id="title" name="title" required>
             </div>
-            <div class="form-group">
-                <label for="genre">Genre</label>
-                <input type="text" id="genre" name="genre" required>
-            </div>
-            <div class="form-group">
-                <label for="duration">Duration (mins)</label>
-                <input type="number" id="duration" name="duration" required>
-            </div>
-            <div class="form-group">
-                <label for="rating">Rating</label>
-                <input type="text" id="rating" name="rating" required>
-            </div>
-            <div class="form-group">
-                <label for="description">Description</label>
-                <textarea id="description" name="description" required></textarea>
-            </div>
-            <div class="form-group">
-                <label for="director">Director</label>
-                <input type="text" id="director" name="director" required>
-            </div>
-            <div class="form-group">
-                <label for="release_date">Release Date</label>
-                <input type="date" id="release_date" name="release_date" required>
-            </div>
-            <div class="form-group">
-                <label for="status">Status</label>
-                <select id="status" name="status" required>
-                    <option value="SHOWING">Now Showing</option>
-                    <option value="UPCOMING">Coming Soon</option>
-                    <option value="NOPREVIEW">Not Available</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="poster">Poster</label>
-                <input type="file" id="poster" name="poster" accept="image/*">
-            </div>
-            <div class="form-group">
-                <label for="banner">Banner</label>
-                <input type="file" id="banner" name="banner" accept="image/*">
-            </div>
-            <div class="form-group">
-                <button type="submit" name="add_movie" class="submit-btn">Add Movie</button>
-            </div>
+            <form method="POST" action="movies.php" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="genre">Genre</label>
+                    <input type="text" id="genre" name="genre" required>
+                </div>
+                <div class="form-group">
+                    <label for="duration">Duration (mins)</label>
+                    <input type="number" id="duration" name="duration" required>
+                </div>
+                <div class="form-group">
+                    <label for="rating">Rating</label>
+                    <input type="text" id="rating" name="rating" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="director">Director</label>
+                    <input type="text" id="director" name="director" required>
+                </div>
+                <div class="form-group">
+                    <label for="release_date">Release Date</label>
+                    <input type="date" id="release_date" name="release_date" required>
+                </div>
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <select id="status" name="status" required>
+                        <option value="SHOWING">Now Showing</option>
+                        <option value="UPCOMING">Coming Soon</option>
+                        <option value="NOPREVIEW">Not Available</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="poster">Poster</label>
+                    <input type="file" id="poster" name="poster" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label for="banner">Banner</label>
+                    <input type="file" id="banner" name="banner" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label for="trailer_url">Trailer URL</label>
+                    <input type="text" id="trailer_url" name="trailer_url" required>
+                </div>
+                <div class="form-group">
+                    <button type="submit" name="add_movie" class="submit-btn">Add Movie</button>
+                </div>
         </form>
     </div>
 </div>
@@ -177,15 +182,19 @@
                 <input type="date" id="edit_release_date" name="release_date" required>
             </div>
             <div class="form-group">
+                <label for="edit_trailer_url">Trailer URL</label>
+                <input type="text" id="edit_trailer_url" name="trailer_url" required>
+            </div>
+            <div class="form-group">
                 <label for="edit_status">Status</label>
                 <select id="edit_status" name="status" required>
                     <option value="SHOWING">Showing</option>
-                    <option value="COMING_SOON">Coming Soon</option>
-                    <option value="ARCHIVED">Archived</option>
+                    <option value="UPCOMING">Coming Soon</option>
+                    <option value="NOPREVIEW">Archived</option>
                 </select>
             </div>
             <div class="form-actions">
-                <button type="submit" name="update_movie" class="btn">Save Changes</button>
+                <button type="submit" name="update-movie" class="btn">Save Changes</button>
             </div>
         </form>
     </div>

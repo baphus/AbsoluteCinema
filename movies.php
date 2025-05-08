@@ -20,6 +20,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_movie'])) {
     $director = $_POST['director'];
     $release_date = $_POST['release_date'];
     $status = $_POST['status'];
+    $trailer_url = $_POST['trailer_url']; 
     $date_added = date("Y-m-d"); // Current date
 
     // Handle poster and banner file uploads
@@ -53,13 +54,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_movie'])) {
     }
 
     // Insert movie into database
-    $insertQuery = "INSERT INTO movies (movie_id, title, genre, duration, rating, description, director, release_date, date_added, status, poster, banner) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $insertQuery = "INSERT INTO movies (movie_id, title, genre, duration, rating, description, director, release_date, date_added, status, poster, banner, trailer_url) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     $stmt = mysqli_prepare($conn, $insertQuery);
-    mysqli_stmt_bind_param($stmt, "ssisssssssss", 
-                           $movie_id, $title, $genre, $duration, $rating, $description, 
-                           $director, $release_date, $date_added, $status, $poster, $banner);
+    mysqli_stmt_bind_param($stmt, "ssissssssssss", 
+    $movie_id, $title, $genre, $duration, $rating, $description, 
+    $director, $release_date, $date_added, $status, $poster, $banner, $trailer_url);
+
 
     if (mysqli_stmt_execute($stmt)) {
         $_SESSION['success_message'] = "Movie added successfully!";
@@ -86,6 +88,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_movie'])) {
     $description = $_POST['description'];
     $director = $_POST['director'];
     $release_date = $_POST['release_date'];
+    $trailer_url = $_POST['trailer_url']; 
     $status = $_POST['status'];
 
     $updateQuery = "UPDATE movies SET 
@@ -96,10 +99,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_movie'])) {
                     description = ?, 
                     director = ?, 
                     release_date = ?, 
-                    status = ? 
+                    status = ?, 
+                    trailer_url = ? 
                     WHERE movie_id = ?";
+
     $stmt = mysqli_prepare($conn, $updateQuery);
-    mysqli_stmt_bind_param($stmt, "ssissssss", $title, $genre, $duration, $rating, $description, $director, $release_date, $status, $movie_id);
+    mysqli_stmt_bind_param($stmt, "ssisssssss", $title, $genre, $duration, $rating, $description, $director, $release_date, $status, $trailer_url, $movie_id);
 
     if (mysqli_stmt_execute($stmt)) {
       $_SESSION['success_message'] = "Movie updated successfully!";
@@ -220,6 +225,7 @@ if (!$result) {
                   <th>Description</th>
                   <th>Director</th>
                   <th>Release Date</th>
+                  <th>Trailer URL</th>
                   <th>Date Added</th>
                   <th>Status</th>
                   <th>Poster</th>
@@ -239,12 +245,27 @@ if (!$result) {
                             <td><?php echo htmlspecialchars(substr($movie['description'], 0, 50) . '...'); ?></td>
                             <td><?php echo htmlspecialchars($movie['director']); ?></td>
                             <td><?php echo htmlspecialchars($movie['release_date']); ?></td>
+                            <td>  <a href="<?php echo htmlspecialchars($movie['trailer_url']); ?>" target="_blank">
+                                    Trailer
+                                  </a> </td>
                             <td><?php echo htmlspecialchars($movie['date_added']); ?></td>
                             <td><?php echo htmlspecialchars($movie['status']); ?></td>
                             <td><img src="<?php echo htmlspecialchars($movie['poster']); ?>" alt="Poster" style="width: 50px;"></td>
                             <td><img src="<?php echo htmlspecialchars($movie['banner']); ?>" alt="Banner" style="width: 100px;"></td>
                             <td class="actions">
-                                <button class="btn-icon btn-edit" onclick="openEditModal('<?php echo htmlspecialchars($movie['movie_id']); ?>', '<?php echo htmlspecialchars($movie['title']); ?>', '<?php echo htmlspecialchars($movie['genre']); ?>', '<?php echo htmlspecialchars($movie['duration']); ?>', '<?php echo htmlspecialchars($movie['rating']); ?>', '<?php echo htmlspecialchars($movie['description']); ?>', '<?php echo htmlspecialchars($movie['director']); ?>', '<?php echo htmlspecialchars($movie['release_date']); ?>', '<?php echo htmlspecialchars($movie['status']); ?>')">
+                                <button class="btn-icon btn-edit" 
+                                    onclick="openEditModal(
+                                        '<?php echo htmlspecialchars($movie['movie_id']); ?>', 
+                                        '<?php echo htmlspecialchars($movie['title']); ?>', 
+                                        '<?php echo htmlspecialchars($movie['genre']); ?>', 
+                                        '<?php echo htmlspecialchars($movie['duration']); ?>', 
+                                        '<?php echo htmlspecialchars($movie['rating']); ?>', 
+                                        '<?php echo htmlspecialchars($movie['description']); ?>', 
+                                        '<?php echo htmlspecialchars($movie['director']); ?>', 
+                                        '<?php echo htmlspecialchars($movie['release_date']); ?>', 
+                                        '<?php echo htmlspecialchars($movie['trailer_url']); ?>',
+                                        '<?php echo htmlspecialchars($movie['status']); ?>'
+                                      )">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <button class="btn-icon btn-delete" onclick="openDeleteModal('<?php echo htmlspecialchars($movie['movie_id']); ?>')">

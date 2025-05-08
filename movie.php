@@ -217,7 +217,7 @@ if (isset($_GET['movie_id'])) {
 
                 <div class="action-buttons">
                     <a href="#showtimes-section" class="btn btn-primary">View Showtimes</a>
-                    <a href="#" class="btn btn-secondary">Watch Trailer</a>
+                    <a href='<?php echo $movie['trailer-url'];?>' class="btn btn-secondary">Watch Trailer</a>
                 </div>
             </div>
         </div>
