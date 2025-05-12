@@ -20,7 +20,7 @@ if (!$result) {
 // Store the fetched rows in an array
 $users = [];
 while ($user = mysqli_fetch_assoc($result)) {
-    $users[] = $user;
+    $users[] = $user;   
 }
 
 // Handle user update

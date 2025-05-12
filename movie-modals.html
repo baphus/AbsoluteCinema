@@ -3,85 +3,117 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles/modal.css">
-</head>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const addModal = document.getElementById('addModal');
-      const addMovieBtn = document.getElementById('add-movie-btn');
-      const addModalCloseBtn = document.querySelector('#addModal .close-btn');
-      
-      addMovieBtn.addEventListener('click', function () {
-          addModal.style.display = 'block';
-      });
-
-      addModalCloseBtn.addEventListener('click', function () {
-          addModal.style.display = 'none';
-      });
-
-      window.addEventListener('click', function (event) {
-          if (event.target == addModal) {
-              addModal.style.display = 'none';
-          }
-      });
-    });
-
-    function openEditModal(movie_id, title, genre, duration, rating, description, director, release_date, trailer_url, status) {
-        document.getElementById('edit_movie_id').value = movie_id;
-        document.getElementById('edit_title').value = title;
-        document.getElementById('edit_genre').value = genre;
-        document.getElementById('edit_duration').value = duration;
-        document.getElementById('edit_rating').value = rating;
-        document.getElementById('edit_description').value = description;
-        document.getElementById('edit_director').value = director;
-        document.getElementById('edit_release_date').value = release_date;
-        document.getElementById('edit_trailer_url').value = trailer_url;
-        document.getElementById('edit_status').value = status;
-
-        document.getElementById('editMovieModal').style.display = 'block';
+  <style>
+    #editMovieModal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.5);
+        padding-top: 50px;
     }
 
-    function closeEditModal() {
-        document.getElementById('editMovieModal').style.display = 'none';
+    .modal-content {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 90%;
+        max-width: 600px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
 
-    // Close the modal if the user clicks outside of it
-    window.addEventListener('click', function(event) {
-        const modal = document.getElementById('editMovieModal');
-        if (event.target === modal) {
-            closeEditModal();
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #e0e0e0;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        font-size: 1.5em;
+        color: #333;
+    }
+
+    .close-btn {
+        color: #aaa;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+
+    .close-btn:hover,
+    .close-btn:focus {
+        color: #000;
+        text-decoration: none;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #4a90e2;
+        box-shadow: 0 0 5px rgba(74,144,226,0.3);
+    }
+
+    .form-actions {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    .btn {
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn:hover {
+        background-color: #357abd;
+    }
+
+    @media screen and (max-width: 600px) {
+        .modal-content {
+            width: 95%;
+            margin: 10% auto;
         }
-    });
-    
-    document.addEventListener('DOMContentLoaded', function () {
-      const deleteModal = document.getElementById('deleteModal');
-      const deleteModalCloseBtns = document.querySelectorAll('#deleteModal .close-btn');
+    }
+</style>
 
-      // Open the delete modal
-      window.openDeleteModal = function (movieId) {
-          document.getElementById('delete_movie_id').value = movieId;
-          deleteModal.style.display = 'block';
-      };
-
-      // Close the delete modal
-      deleteModalCloseBtns.forEach(btn => {
-          btn.addEventListener('click', function () {
-              deleteModal.style.display = 'none';
-          });
-      });
-
-      // Close modal when clicking outside the modal content
-      window.addEventListener('click', function (event) {
-          if (event.target == deleteModal) {
-              deleteModal.style.display = 'none';
-          }
-      });
-
-      // Close modal when clicking cancel button
-      window.closeDeleteModal = function () {
-          deleteModal.style.display = 'none';
-      };
-    });
-  </script>
+</head>
 <body>
    <div id="addModal" class="modal">
     <div class="modal-content">
@@ -151,40 +183,50 @@
             <h3>Edit Movie</h3>
             <span class="close-btn" onclick="closeEditModal()">&times;</span>
         </div>
-        <form method="POST" action="movies.php">
+        <form method="POST" action="movies.php" enctype="multipart/form-data">
             <input type="hidden" id="edit_movie_id" name="movie_id">
+            <input type="hidden" name="update_movie" value="1">
+            
             <div class="form-group">
                 <label for="edit_title">Title</label>
                 <input type="text" id="edit_title" name="title" required>
             </div>
+            
             <div class="form-group">
                 <label for="edit_genre">Genre</label>
                 <input type="text" id="edit_genre" name="genre" required>
             </div>
+            
             <div class="form-group">
                 <label for="edit_duration">Duration (mins)</label>
-                <input type="number" id="edit_duration" name="duration" required>
+                <input type="number" id="edit_duration" name="duration" min="1" required>
             </div>
+            
             <div class="form-group">
                 <label for="edit_rating">Rating</label>
                 <input type="text" id="edit_rating" name="rating" required>
             </div>
+            
             <div class="form-group">
                 <label for="edit_description">Description</label>
-                <textarea id="edit_description" name="description" required></textarea>
+                <textarea id="edit_description" name="description" rows="4" required></textarea>
             </div>
+            
             <div class="form-group">
                 <label for="edit_director">Director</label>
                 <input type="text" id="edit_director" name="director" required>
             </div>
+            
             <div class="form-group">
                 <label for="edit_release_date">Release Date</label>
                 <input type="date" id="edit_release_date" name="release_date" required>
             </div>
+            
             <div class="form-group">
                 <label for="edit_trailer_url">Trailer URL</label>
-                <input type="text" id="edit_trailer_url" name="trailer_url" required>
+                <input type="url" id="edit_trailer_url" name="trailer-url" required>
             </div>
+            
             <div class="form-group">
                 <label for="edit_status">Status</label>
                 <select id="edit_status" name="status" required>
@@ -193,8 +235,19 @@
                     <option value="NOPREVIEW">Archived</option>
                 </select>
             </div>
+            
+            <div class="form-group">
+                <label for="edit_poster">Movie Poster</label>
+                <input type="file" id="edit_poster" name="poster" accept="image/*">
+            </div>
+            
+            <div class="form-group">
+                <label for="edit_banner">Movie Banner</label>
+                <input type="file" id="edit_banner" name="banner" accept="image/*">
+            </div>
+            
             <div class="form-actions">
-                <button type="submit" name="update-movie" class="btn">Save Changes</button>
+                <button type="submit" name="update_movie" class="btn">Save Changes</button>
             </div>
         </form>
     </div>
@@ -220,4 +273,83 @@
     </div>
 </div>
 </body>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const addModal = document.getElementById('addModal');
+      const addMovieBtn = document.getElementById('add-movie-btn');
+      const addModalCloseBtn = document.querySelector('#addModal .close-btn');
+      
+      addMovieBtn.addEventListener('click', function () {
+          addModal.style.display = 'block';
+      });
+
+      addModalCloseBtn.addEventListener('click', function () {
+          addModal.style.display = 'none';
+      });
+
+      window.addEventListener('click', function (event) {
+          if (event.target == addModal) {
+              addModal.style.display = 'none';
+          }
+      });
+    });
+
+    function openEditModal(button) {
+        const movie = JSON.parse(button.getAttribute('data-movie'));
+
+        document.getElementById('edit_movie_id').value = movie.movie_id;
+        document.getElementById('edit_title').value = movie.title;
+        document.getElementById('edit_genre').value = movie.genre;
+        document.getElementById('edit_duration').value = movie.duration;
+        document.getElementById('edit_rating').value = movie.rating;
+        document.getElementById('edit_description').value = movie.description;
+        document.getElementById('edit_director').value = movie.director;
+        document.getElementById('edit_release_date').value = movie.release_date;
+        document.getElementById('edit_trailer_url').value = movie.trailer_url;
+        document.getElementById('edit_status').value = movie.status;
+
+        document.getElementById('editMovieModal').style.display = 'block';
+    }
+    function closeEditModal() {
+        document.getElementById('editMovieModal').style.display = 'none';
+    }
+
+    // Close the modal if the user clicks outside of it
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('editMovieModal');
+        if (event.target === modal) {
+            closeEditModal();
+        }
+    });
+    
+    document.addEventListener('DOMContentLoaded', function () {
+      const deleteModal = document.getElementById('deleteModal');
+      const deleteModalCloseBtns = document.querySelectorAll('#deleteModal .close-btn');
+
+      // Open the delete modal
+      window.openDeleteModal = function (movieId) {
+          document.getElementById('delete_movie_id').value = movieId;
+          deleteModal.style.display = 'block';
+      };
+
+      // Close the delete modal
+      deleteModalCloseBtns.forEach(btn => {
+          btn.addEventListener('click', function () {
+              deleteModal.style.display = 'none';
+          });
+      });
+
+      // Close modal when clicking outside the modal content
+      window.addEventListener('click', function (event) {
+          if (event.target == deleteModal) {
+              deleteModal.style.display = 'none';
+          }
+      });
+
+      // Close modal when clicking cancel button
+      window.closeDeleteModal = function () {
+          deleteModal.style.display = 'none';
+      };
+    });
+  </script>
 </html>

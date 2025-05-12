@@ -82,124 +82,11 @@ if (isset($_GET['movie_id'])) {
             color: white;
             text-shadow: 0 2px 5px rgba(0, 0, 0, 0.7);
         }
-        
-        /* New styles for showtimes */
-        .date-tab {
-            display: inline-block;
-            padding: 10px 15px;
-            background-color: #f2f2f2;
-            cursor: pointer;
-            margin-right: 5px;
-            border-radius: 5px 5px 0 0;
-            font-weight: bold;
-        }
-        
-        .date-tab.active {
-            background-color: #e0e0e0;
-            border-bottom: 3px solid #ff0000;
-        }
-        
-        .showtimes-content {
-            display: none;
-            padding: 15px;
-            background-color: #f8f8f8;
-            border-radius: 0 0 5px 5px;
-            margin-bottom: 20px;
-        }
-        
-        .showtimes-content.active {
-            display: block;
-        }
-        
-        .book-now-btn {
-            display: block;
-            width: 100%;
-            padding: 12px;
-            background-color: #e63946;
-            color: white;
-            text-align: center;
-            text-decoration: none;
-            font-weight: bold;
-            border-radius: 5px;
-            margin-top: 10px;
-            transition: background-color 0.3s;
-        }
-        
-        .book-now-btn:hover {
-            background-color: #c1121f;
-        }
-        
-        .time-slot {
-            display: inline-block;
-            padding: 10px 15px;
-            margin: 5px;
-            background-color: white;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            text-decoration: none;
-            color: #333;
-            transition: all 0.3s;
-        }
-        
-        .time-slot:hover {
-            background-color: #f0f0f0;
-            transform: translateY(-2px);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        .time-slot .screen-type {
-            display: block;
-            font-size: 0.8em;
-            color: #666;
-        }
-        
-        .time-slot .price {
-            display: block;
-            font-weight: bold;
-            margin-top: 5px;
-        }
-        
-        .no-showtimes-message {
-            padding: 15px;
-            text-align: center;
-            color: #666;
-            font-style: italic;
-        }
     </style>
-    <script>
-        function openShowtimeTab(evt, dateId) {
-            // Hide all showtime content
-            var tabcontent = document.getElementsByClassName("showtimes-content");
-            for (var i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].classList.remove("active");
-            }
-            
-            // Remove "active" class from all tabs
-            var tablinks = document.getElementsByClassName("date-tab");
-            for (var i = 0; i < tablinks.length; i++) {
-                tablinks[i].classList.remove("active");
-            }
-            
-            // Show the selected tab content and add "active" class to the button
-            document.getElementById(dateId).classList.add("active");
-            evt.currentTarget.classList.add("active");
-        }
-        
-        // Initialize the first tab as active when page loads
-        window.onload = function() {
-            // Select the first tab by default
-            var firstTab = document.querySelector('.date-tab');
-            if (firstTab) {
-                firstTab.click();
-            }
-        }
-    </script>
 </head>
 <body>
     <?php include("header.php"); ?>
-    
-    <div class="movie-hero">
-    </div>
+    <div class="movie-hero"> </div>
     
     <div class="movie-container">
         <div class="movie-info-container">
@@ -216,8 +103,8 @@ if (isset($_GET['movie_id'])) {
                 </div>
 
                 <div class="action-buttons">
-                    <a href="#showtimes-section" class="btn btn-primary">View Showtimes</a>
-                    <a href='<?php echo $movie['trailer-url'];?>' class="btn btn-secondary">Watch Trailer</a>
+                    <a href="booking.php?movie_id=<?php echo urlencode($movie['movie_id'])?>" class="btn btn-primary">Book Now</a>
+                    <a href='<?php echo $movie['trailer_url'];?>' class="btn btn-secondary" target="_blank">Watch Trailer</a>
                 </div>
             </div>
         </div>
@@ -346,4 +233,32 @@ if (isset($_GET['movie_id'])) {
 
     <?php include("footer.php"); ?>
 </body>
+ <script>
+        function openShowtimeTab(evt, dateId) {
+            // Hide all showtime content
+            var tabcontent = document.getElementsByClassName("showtimes-content");
+            for (var i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            
+            // Remove "active" class from all tabs
+            var tablinks = document.getElementsByClassName("date-tab");
+            for (var i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            
+            // Show the selected tab content and add "active" class to the button
+            document.getElementById(dateId).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+        
+        // Initialize the first tab as active when page loads
+        window.onload = function() {
+            // Select the first tab by default
+            var firstTab = document.querySelector('.date-tab');
+            if (firstTab) {
+                firstTab.click();
+            }
+        }
+    </script>
 </html>

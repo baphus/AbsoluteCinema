@@ -9,13 +9,11 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 } else {
     $userID = $_SESSION['user_id'];
-    echo("User ID: $userID");
 }
 
 // Check if movie_id is provided in the URL
 if (isset($_GET['movie_id']) && !empty($_GET['movie_id'])) {
     $movie_id = mysqli_real_escape_string($conn, $_GET['movie_id']);
-    echo("Movie ID from URL: $movie_id");
 
     // Fetch the movie details
     $movieQuery = "SELECT * FROM movies WHERE movie_id = ?";
@@ -26,7 +24,6 @@ if (isset($_GET['movie_id']) && !empty($_GET['movie_id'])) {
 
     if ($result && mysqli_num_rows($result) > 0) {
         $movie = mysqli_fetch_assoc($result);
-        echo("Movie found: " . $movie['title']);
 
         // Fetch available showtimes for this movie
         $showtimeQuery = "
@@ -44,9 +41,6 @@ if (isset($_GET['movie_id']) && !empty($_GET['movie_id'])) {
         while ($row = mysqli_fetch_assoc($showtimeResult)) {
             $showtimes[] = $row;
         }
-        if (empty($showtimes)) {
-            echo("No showtimes found for movie ID: $movie_id");
-        }
 
         // Fetch available screens for this movie
         $screenQuery = "
@@ -63,16 +57,11 @@ if (isset($_GET['movie_id']) && !empty($_GET['movie_id'])) {
         while ($row = mysqli_fetch_assoc($screenResult)) {
             $screens[] = $row;
         }
-        if (empty($screens)) {
-            echo("No screens found for movie ID: $movie_id");
-        }
     } else {
-        echo("Movie not found for ID: $movie_id");
         header("Location: 404.php");
         exit;
     }
 } else {
-    echo("Movie ID is missing or empty in the URL.");
     header("Location: index.php");
     exit;
 }
@@ -80,7 +69,6 @@ if (isset($_GET['movie_id']) && !empty($_GET['movie_id'])) {
 // Handle POST request for screen selection
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['screen_id'])) {
     $screen_id = mysqli_real_escape_string($conn, $_POST['screen_id']);
-    echo("Selected Screen ID: $screen_id");
 
     $showtimeQuery = "
         SELECT s.showtime_id, s.show_date, s.start_time, scr.screen_name 
@@ -103,7 +91,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['screen_id'])) {
 // Handle POST request for showtime selection
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['showtime_id'])) {
     $showtime_id = mysqli_real_escape_string($conn, $_POST['showtime_id']);
-    echo("Selected Showtime ID: $showtime_id");
 
     // Fetch available seats for the selected showtime
     $seatQuery = "
@@ -121,22 +108,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['showtime_id'])) {
     while ($seat = mysqli_fetch_assoc($seatResult)) {
         $seats[] = $seat;
     }
-
-    if (empty($seats)) {
-        echo("No seats found for Showtime ID: $showtime_id");
-    }
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_booking'])) {
     $showtime_id = mysqli_real_escape_string($conn, $_POST['selected_showtime_id']);
     $selected_seats = isset($_POST['selected_seat_ids']) ? $_POST['selected_seat_ids'] : [];
 
-    echo("Form submitted: " . json_encode($_POST));
-    echo("Selected seats: " . json_encode($selected_seats));
-
     if (empty($selected_seats)) {
         $error_message = "Please select at least one seat before continuing.";
-        echo("Error: No seats selected");
     } else {
         $ticket_count = count($selected_seats);
         $ticket_price_per_seat = 200;
@@ -177,11 +156,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_booking'])) {
                     throw new Exception("Execute failed for seat update: " . mysqli_stmt_error($stmt));
                 }
 
-                echo("Seat $escaped_seat_id booked and updated.");
             }
 
             mysqli_commit($conn);
-            echo("All seats booked and transaction committed.");
 
             header("Location: payment.php?booking_id=" . urlencode($escaped_booking_id));
             exit;

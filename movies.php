@@ -88,31 +88,70 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_movie'])) {
     $description = $_POST['description'];
     $director = $_POST['director'];
     $release_date = $_POST['release_date'];
-    $trailer_url = $_POST['trailer_url']; 
+    $trailer_url = $_POST['trailer-url'];
     $status = $_POST['status'];
 
+    // Default: retrieve existing poster and banner
+    $query = "SELECT poster, banner FROM movies WHERE movie_id = ?";
+    $stmt = mysqli_prepare($conn, $query);
+    mysqli_stmt_bind_param($stmt, "s", $movie_id);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_bind_result($stmt, $existing_poster, $existing_banner);
+    mysqli_stmt_fetch($stmt);
+    mysqli_stmt_close($stmt);
+
+    $poster = $existing_poster;
+    $banner = $existing_banner;
+
+    // Handle poster upload
+    if (isset($_FILES['poster']) && $_FILES['poster']['size'] > 0) {
+        $poster_dir = __DIR__ . "/posters/";
+        if (!file_exists($poster_dir)) mkdir($poster_dir, 0777, true);
+        $poster_name = "poster_" . time() . "." . pathinfo($_FILES["poster"]["name"], PATHINFO_EXTENSION);
+        $poster_path = $poster_dir . $poster_name;
+        if (move_uploaded_file($_FILES["poster"]["tmp_name"], $poster_path)) {
+            $poster = "posters/" . $poster_name;
+        }
+    }
+
+    // Handle banner upload
+    if (isset($_FILES['banner']) && $_FILES['banner']['size'] > 0) {
+        $banner_dir = __DIR__ . "/banners/";
+        if (!file_exists($banner_dir)) mkdir($banner_dir, 0777, true);
+        $banner_name = "banner_" . time() . "." . pathinfo($_FILES["banner"]["name"], PATHINFO_EXTENSION);
+        $banner_path = $banner_dir . $banner_name;
+        if (move_uploaded_file($_FILES["banner"]["tmp_name"], $banner_path)) {
+            $banner = "banners/" . $banner_name;
+        }
+    }
+
+    // Update query with poster, banner, and trailer_url
     $updateQuery = "UPDATE movies SET 
-                    title = ?, 
-                    genre = ?, 
-                    duration = ?, 
-                    rating = ?, 
-                    description = ?, 
-                    director = ?, 
-                    release_date = ?, 
-                    status = ?, 
-                    trailer_url = ? 
-                    WHERE movie_id = ?";
+        title = ?, 
+        genre = ?, 
+        duration = ?, 
+        rating = ?, 
+        description = ?, 
+        director = ?, 
+        release_date = ?, 
+        status = ?, 
+        trailer_url = ?, 
+        poster = ?, 
+        banner = ?
+        WHERE movie_id = ?";
 
     $stmt = mysqli_prepare($conn, $updateQuery);
-    mysqli_stmt_bind_param($stmt, "ssisssssss", $title, $genre, $duration, $rating, $description, $director, $release_date, $status, $trailer_url, $movie_id);
+    mysqli_stmt_bind_param($stmt, "ssisssssssss", $title, $genre, $duration, $rating, $description, $director, $release_date, $status, $trailer_url, $poster, $banner, $movie_id);
 
     if (mysqli_stmt_execute($stmt)) {
-      $_SESSION['success_message'] = "Movie updated successfully!";
+        $_SESSION['success_message'] = "Movie updated successfully!";
     } else {
-      $_SESSION['error_message'] = "Error updating movie: " . mysqli_error($conn);
+        $_SESSION['error_message'] = "Error updating movie: " . mysqli_error($conn);
     }
 
     mysqli_stmt_close($stmt);
+    header("Location: movies.php");
+    exit();
 }
 
 // Delete movie form submission
@@ -138,7 +177,7 @@ $sortBy = isset($_GET['sort-by']) ? $_GET['sort-by'] : 'movie_id'; // Default so
 // Build the query based on the sort option
 $getMoviesQuery = "SELECT * FROM movies";
 if (!empty($sortBy)) {
-    $allowedSortColumns = ['movie_id', 'title', 'genre', 'duration', 'rating', 'description', 'director', 'release_date', 'date_added', 'status', 'poster', 'banner'];
+    $allowedSortColumns = ['movie_id', 'title', 'genre', 'duration', 'rating', 'release_date', 'date_added', 'status', 'poster', 'banner'];
     if (in_array($sortBy, $allowedSortColumns)) {
         $getMoviesQuery .= " ORDER BY $sortBy ASC";
     }
@@ -187,7 +226,6 @@ if (!$result) {
             </div>
         <?php endif; ?>
 
-
           <div class="content-wrapper">
           <div class="management-header">
             <h2>Movie Management</h2>
@@ -203,8 +241,6 @@ if (!$result) {
                   <option value="genre" <?php echo $sortBy === 'genre' ? 'selected' : ''; ?>>By Genre</option>
                   <option value="duration" <?php echo $sortBy === 'duration' ? 'selected' : ''; ?>>By Duration</option>
                   <option value="rating" <?php echo $sortBy === 'rating' ? 'selected' : ''; ?>>By Rating</option>
-                  <option value="description" <?php echo $sortBy === 'description' ? 'selected' : ''; ?>>By Description</option>
-                  <option value="director" <?php echo $sortBy === 'director' ? 'selected' : ''; ?>>By Director</option>
                   <option value="release_date" <?php echo $sortBy === 'release_date' ? 'selected' : ''; ?>>By Release Date</option>
                   <option value="date_added" <?php echo $sortBy === 'date_added' ? 'selected' : ''; ?>>By Date Added</option>
                   <option value="status" <?php echo $sortBy === 'status' ? 'selected' : ''; ?>>By Status</option>
@@ -246,26 +282,17 @@ if (!$result) {
                             <td><?php echo htmlspecialchars($movie['director']); ?></td>
                             <td><?php echo htmlspecialchars($movie['release_date']); ?></td>
                             <td>  <a href="<?php echo htmlspecialchars($movie['trailer_url']); ?>" target="_blank">
-                                    Trailer
+                                    <?php echo htmlspecialchars($movie['trailer_url'])?>
                                   </a> </td>
                             <td><?php echo htmlspecialchars($movie['date_added']); ?></td>
                             <td><?php echo htmlspecialchars($movie['status']); ?></td>
                             <td><img src="<?php echo htmlspecialchars($movie['poster']); ?>" alt="Poster" style="width: 50px;"></td>
                             <td><img src="<?php echo htmlspecialchars($movie['banner']); ?>" alt="Banner" style="width: 100px;"></td>
                             <td class="actions">
-                                <button class="btn-icon btn-edit" 
-                                    onclick="openEditModal(
-                                        '<?php echo htmlspecialchars($movie['movie_id']); ?>', 
-                                        '<?php echo htmlspecialchars($movie['title']); ?>', 
-                                        '<?php echo htmlspecialchars($movie['genre']); ?>', 
-                                        '<?php echo htmlspecialchars($movie['duration']); ?>', 
-                                        '<?php echo htmlspecialchars($movie['rating']); ?>', 
-                                        '<?php echo htmlspecialchars($movie['description']); ?>', 
-                                        '<?php echo htmlspecialchars($movie['director']); ?>', 
-                                        '<?php echo htmlspecialchars($movie['release_date']); ?>', 
-                                        '<?php echo htmlspecialchars($movie['trailer_url']); ?>',
-                                        '<?php echo htmlspecialchars($movie['status']); ?>'
-                                      )">
+                                <button 
+                                    class="btn-icon btn-edit"
+                                    data-movie='<?php echo json_encode($movie, JSON_HEX_APOS | JSON_HEX_QUOT); ?>'
+                                    onclick="openEditModal(this)">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <button class="btn-icon btn-delete" onclick="openDeleteModal('<?php echo htmlspecialchars($movie['movie_id']); ?>')">

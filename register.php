@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Check if email already exists
     $emailQuery = "SELECT email FROM users WHERE email = '$email'";
     $emailResult = mysqli_query($conn, $emailQuery);
-
+  
     if (mysqli_num_rows($emailResult) > 0) {
         echo "This email is already taken.";
     } else {

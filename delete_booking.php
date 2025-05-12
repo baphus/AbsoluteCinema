@@ -58,4 +58,4 @@ if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET['id'])) {
     header("Location: bookings.php");
     exit();
 }
-?>
+?>45jn

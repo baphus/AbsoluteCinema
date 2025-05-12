@@ -32,3 +32,4 @@ if (isset($_GET['id']) && !empty($_GET['id'])) {
 // Redirect back to the seating management page
 header("Location: seatings.php");
 exit();
+?>
