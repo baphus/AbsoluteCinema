@@ -69,8 +69,7 @@ $formatted_price = "₱" . number_format($booking['total_price'], 2);
     <link rel="stylesheet" href="/styles/confirmation.css">
 </head>
 <body>
-    <?php include("header.php");?>
-    
+        <?php include("header.php");?>    
     <div class="confirmation-container">
         <div class="confirmation-header">
             <div class="check-icon">

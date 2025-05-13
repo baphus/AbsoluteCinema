@@ -47,6 +47,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div class="page-container">
    <?php include("header.php")?>
     <main>
+        <?php if (isset($_SESSION['success_message'])): ?>
+            <div class="alert alert-success">
+        <?php echo htmlspecialchars($_SESSION['success_message']); ?>
+        <?php unset($_SESSION['success_message']); ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['error_message'])): ?>
+            <div class="alert alert-danger">
+                <?php echo htmlspecialchars($_SESSION['error_message']); ?>
+                <?php unset($_SESSION['error_message']); ?>
+            </div>
+        <?php endif; ?>
       <form class="form-box" method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]) ?>">
         <h2>Log In</h2>
         <input type="email" name="email" placeholder="Email" required />

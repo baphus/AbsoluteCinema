@@ -158,7 +158,7 @@ if (!$result) {
                                                         )">
                                                             <i class="fas fa-edit"></i>
                                                         </button>
-                                            <button class="btn-icon btn-delete" onclick="if(confirm('Are you sure you want to delete this booking?')) window.location.href='delete_booking.php?id=<?php echo $booking['booking_id']; ?>';">
+                                            <button class="btn-icon btn-delete" onclick="if(confirm('Are you sure you want to delete this booking?')) window.location.href='delete_booking.php?id=<?php echo urlencode($booking['booking_id']); ?>';">
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
                                         </td>

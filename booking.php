@@ -143,9 +143,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_booking'])) {
         $total_price = ($ticket_price_per_seat * $ticket_count) + $booking_fee;
         $individual_price = $ticket_price_per_seat + ($booking_fee / $ticket_count);
 
-        mysqli_begin_transaction($conn);
-
         try {
+            // Start transaction only once
             mysqli_begin_transaction($conn);
 
             $booking_id = uniqid("BKNG#");
@@ -183,16 +182,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_booking'])) {
 
             mysqli_commit($conn);
 
+            // Redirect to payment page
             header("Location: payment.php?booking_id=" . urlencode($escaped_booking_id));
             exit;
 
         } catch (Exception $e) {
             mysqli_rollback($conn);
-            echo("Booking failed: " . $e->getMessage());
             $error_message = "Booking error: " . $e->getMessage();
         }
     }
-}
+}   
 ?>
 
 <!DOCTYPE html>

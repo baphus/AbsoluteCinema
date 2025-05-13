@@ -25,14 +25,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $query = "INSERT INTO users (user_id, first_name, last_name, email, phone, role, password) VALUES ('$user_id','$firstname', '$lastname', '$email', '$phone', '$role', '$hashed_password')";
             
             if (mysqli_query($conn, $query)) {
-                echo "Successfully registered.";
+                $_SESSION['success_message'] =  "Successfully registered.";
                 header("Location: login.php");
                 exit;
             } else {
-                echo "Error: Unable to register.";
+                 $_SESSION['error_message'] = "Error: Unable to register.";
             }
         } else {
-            echo "Passwords do not match.";
+             $_SESSION['$error_message'] = "Passwords do not match.";
         }
     }
 }

@@ -97,7 +97,7 @@ $bookingsResult = mysqli_stmt_get_result($bookingsStmt);
                                     <div class="booking-info-column">
                                         <p class="booking-info-label">Date & Time</p>
                                         <p class="booking-info-value"><?php echo date("d M Y", strtotime($booking['show_date'])); ?></p>
-                                        <p class="booking-info-value"><?php echo htmlspecialchars($booking['start_time']); ?></p>
+                                        <p class="booking-info-value"><?php echo date('h:i A', strtotime($booking['start_time'])); ?></p>
                                     </div>
                                     <div class="booking-info-column">
                                         <p class="booking-info-label">Screen & Seat</p>

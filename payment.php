@@ -61,62 +61,25 @@ $billing_first_name = $user['first_name'];
 $billing_last_name = $user['last_name'];
 $billing_email = $user['email'];
 
-// Step 1: Get the show_date for the current booking
-$showDateQuery = "
-    SELECT s.show_date
-    FROM bookings b
-    JOIN showtimes s ON b.showtime_id = s.showtime_id
-    WHERE b.booking_id = ?
-";
-$stmt = mysqli_prepare($conn, $showDateQuery);
-mysqli_stmt_bind_param($stmt, "s", $booking_id);
-mysqli_stmt_execute($stmt);
-$showDateResult = mysqli_stmt_get_result($stmt);
-
-if (!$showDateResult || mysqli_num_rows($showDateResult) === 0) {
-    error_log("Show date not found for booking_id: $booking_id");
-    header("Location: index.php");
-    exit;
-}
-
-$row = mysqli_fetch_assoc($showDateResult);
-$target_show_date = $row['show_date'];
-
-// Step 2: Fetch all bookings for the user on that show_date
-// FIXED QUERY: Based on the actual table structure without seat-booking direct relationship
+// FIXED: Fetch only the specific booking by booking_id
 $bookingQuery = "
     SELECT b.*, s1.show_date, s1.start_time, m.title, m.poster, m.duration, m.rating, scr.screen_name
-        FROM bookings b
-        JOIN showtimes s1 ON b.showtime_id = s1.showtime_id
-        JOIN movies m ON s1.movie_id = m.movie_id
-        JOIN screens scr ON s1.screen_id = scr.screen_id
-        WHERE b.user_id = ? AND s1.show_date = ?
-        ORDER BY s1.start_time, scr.screen_name
+    FROM bookings b
+    JOIN showtimes s1 ON b.showtime_id = s1.showtime_id
+    JOIN movies m ON s1.movie_id = m.movie_id
+    JOIN screens scr ON s1.screen_id = scr.screen_id
+    WHERE b.booking_id = ? AND b.user_id = ?
 ";
 $stmt = mysqli_prepare($conn, $bookingQuery);
-mysqli_stmt_bind_param($stmt, "ss", $userID, $target_show_date);
+mysqli_stmt_bind_param($stmt, "ss", $booking_id, $userID);
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 
-// Collect booking info and use the first row for display
-$displayData = null;
-
 if ($result && mysqli_num_rows($result) > 0) {
-    // Just use the first booking for display
     $displayData = mysqli_fetch_assoc($result);
-    
-    // Reset the result pointer to process all bookings if needed
-    mysqli_data_seek($result, 0);
-    
-    // For seat display, we'll just show seat count since we don't have individual seat info
-    $total_seats = 0;
-    while ($booking = mysqli_fetch_assoc($result)) {
-        $total_seats += $booking['seat_count'];
-    }
-    
-    $seat_display = $total_seats . " seat(s)";
+    $seat_display = $displayData['seat_count'] . " seat(s)";
 } else {
-    error_log("No bookings found for User ID: $userID on show date: $target_show_date");
+    error_log("No booking found for Booking ID: $booking_id and User ID: $userID");
     header("Location: index.php");
     exit;
 }
@@ -277,7 +240,7 @@ $transaction_id = "TXN" . rand(100000, 999999);
                             <p><?php echo htmlspecialchars($displayData['rating']); ?> | <?php echo htmlspecialchars($displayData['duration']); ?> mins</p>
                             <p><?php echo date('F d', strtotime($displayData['show_date'])); ?>, <?php echo date('h:i A', strtotime($displayData['start_time'])); ?></p>
                             <p>Screen: <?php echo htmlspecialchars($displayData['screen_name']); ?></p>
-                            <p>Seats: <?php echo htmlspecialchars($seat_display); ?></p> <!-- Multiple seats -->
+                            <p>Seats: <?php echo htmlspecialchars($seat_display); ?></p> <!-- Shows only seats for this booking -->
                         </div>
                     </div>
                     
