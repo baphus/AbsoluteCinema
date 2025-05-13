@@ -30,7 +30,7 @@ if (isset($_GET['movie_id']) && !empty($_GET['movie_id'])) {
             SELECT s.showtime_id, s.show_date, s.start_time, s.price, scr.screen_name, scr.screen_id 
             FROM showtimes s
             JOIN screens scr ON s.screen_id = scr.screen_id
-            WHERE s.movie_id = ? AND s.status = 'available' 
+            WHERE s.movie_id = ? AND s.status = 'active' 
             AND s.show_date >= CURDATE()
             ORDER BY s.show_date, s.start_time";
         $stmt = mysqli_prepare($conn, $showtimeQuery);
@@ -47,7 +47,7 @@ if (isset($_GET['movie_id']) && !empty($_GET['movie_id'])) {
             SELECT DISTINCT scr.screen_id, scr.screen_name 
             FROM screens scr
             JOIN showtimes s ON scr.screen_id = s.screen_id
-            WHERE s.movie_id = ? AND s.status = 'available' AND scr.status = 'active' AND s.show_date >= CURDATE()
+            WHERE s.movie_id = ? AND s.status = 'active' AND scr.status = 'active' AND s.show_date >= CURDATE()
             ORDER BY scr.screen_name";
         $stmt = mysqli_prepare($conn, $screenQuery);
         mysqli_stmt_bind_param($stmt, "s", $movie_id);
@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['screen_id'])) {
         SELECT s.showtime_id, s.show_date, s.start_time, s.price, scr.screen_name 
         FROM showtimes s
         JOIN screens scr ON s.screen_id = scr.screen_id
-        WHERE s.screen_id = ? AND s.movie_id = ? AND s.status = 'available' 
+        WHERE s.screen_id = ? AND s.movie_id = ? AND s.status = 'active' 
         AND s.show_date >= CURDATE()
         ORDER BY s.show_date, s.start_time";
     $stmt = mysqli_prepare($conn, $showtimeQuery);

@@ -1,6 +1,15 @@
 <?php
+// Start with session debugging
 session_start();
 include("config.php");
+
+// Debugging section - Comment out or remove in production
+//echo "<div style='background-color: #f8f9fa; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd;'>";
+//echo "<h3>Session Debug Info</h3>";
+//echo "SESSION user_id: " . (isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'Not set') . "<br>";
+//echo "SESSION user_name: " . (isset($_SESSION['user_name']) ? $_SESSION['user_name'] : 'Not set') . "<br>";
+//echo "</div>";
+// End debugging section
 
 // Check if the user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -8,17 +17,58 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Fetch user details
+// Fetch user details with error checking
 $user_id = $_SESSION['user_id'];
-$userQuery = "SELECT first_name, last_name, email, phone, created_at FROM users WHERE user_id = ?";
+$userQuery = "SELECT user_id, first_name, last_name, email, phone, created_at, role FROM users WHERE user_id = ?";
 $userStmt = mysqli_prepare($conn, $userQuery);
-mysqli_stmt_bind_param($userStmt, "i", $user_id);
-mysqli_stmt_execute($userStmt);
-mysqli_stmt_bind_result($userStmt, $first_name, $last_name, $email, $phone, $created_at);
-mysqli_stmt_fetch($userStmt);
+
+if (!$userStmt) {
+    die("Error in user query preparation: " . mysqli_error($conn));
+}
+
+mysqli_stmt_bind_param($userStmt, "s", $user_id);
+$userExecute = mysqli_stmt_execute($userStmt);
+
+if (!$userExecute) {
+    die("Error executing user query: " . mysqli_stmt_error($userStmt));
+}
+
+$userResult = mysqli_stmt_get_result($userStmt);
+
+// Check if user data was found
+if ($userRow = mysqli_fetch_assoc($userResult)) {
+    $fetched_user_id = $userRow['user_id']; // Explicitly fetch to verify
+    $first_name = $userRow['first_name'];
+    $last_name = $userRow['last_name'];
+    $email = $userRow['email'];
+    $phone = $userRow['phone'];
+    $created_at = $userRow['created_at'];
+    $role = $userRow['role'];
+    
+    // More debugging
+    //echo "<div style='background-color: #f8f9fa; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd;'>";
+    //echo "<h3>Database User Debug Info</h3>";
+    //echo "Fetched user_id: $fetched_user_id<br>";
+    //echo "Role: $role<br>";
+    //echo "</div>";
+} else {
+    // Handle the case where user data wasn't found
+    echo "<div style='background-color: #ffdddd; padding: 10px; margin-bottom: 15px; border: 1px solid #f8d7da;'>";
+    echo "<h3>Error: User Not Found</h3>";
+    echo "No user data found for ID: $user_id<br>";
+    echo "SQL Error: " . mysqli_error($conn);
+    echo "</div>";
+    
+    $first_name = "Unknown";
+    $last_name = "User";
+    $email = "";
+    $phone = "";
+    $created_at = date("Y-m-d H:i:s");
+    $role = "";
+}
 mysqli_stmt_close($userStmt);
 
-// Fetch user bookings with movie poster
+// Fetch user bookings with movie poster and proper error handling
 $bookingsQuery = "
     SELECT 
         b.booking_id,
@@ -38,12 +88,22 @@ $bookingsQuery = "
     JOIN showtimes st ON b.showtime_id = st.showtime_id
     JOIN movies m ON st.movie_id = m.movie_id
     JOIN screens s ON st.screen_id = s.screen_id
-    WHERE user_id = ?
+    WHERE b.user_id = ?
     ORDER BY b.booking_date DESC";
 
 $bookingsStmt = mysqli_prepare($conn, $bookingsQuery);
+
+if (!$bookingsStmt) {
+    die("Error in bookings query preparation: " . mysqli_error($conn));
+}
+
 mysqli_stmt_bind_param($bookingsStmt, "s", $user_id);
-mysqli_stmt_execute($bookingsStmt);
+$bookingsExecute = mysqli_stmt_execute($bookingsStmt);
+
+if (!$bookingsExecute) {
+    die("Error executing bookings query: " . mysqli_stmt_error($bookingsStmt));
+}
+
 $bookingsResult = mysqli_stmt_get_result($bookingsStmt);
 ?>
 
@@ -68,6 +128,7 @@ $bookingsResult = mysqli_stmt_get_result($bookingsStmt);
                 <p>Email: <?php echo htmlspecialchars($email); ?></p>
                 <p>Phone: <?php echo htmlspecialchars($phone); ?></p>
                 <p>Member since: <?php echo date("F Y", strtotime($created_at)); ?></p>
+                <p>Account type: <?php echo htmlspecialchars($role); ?></p>
             </div>
         </div> 
 
@@ -116,7 +177,7 @@ $bookingsResult = mysqli_stmt_get_result($bookingsStmt);
                         </div>
                     <?php endwhile; ?>
                 <?php else: ?>
-                    <p>No bookings found.</p>
+                    <p>No bookings found for this user account (ID: <?php echo $user_id; ?>).</p>
                 <?php endif; ?>
             </div>
         </div>
