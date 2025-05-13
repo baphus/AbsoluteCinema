@@ -11,7 +11,7 @@ if (!isset($_SESSION['user_name']) || $_SESSION['role'] !== 'admin') {
 // Process form submission for adding new screens
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_screen'])) {
     // Generate a unique screen ID first
-    $screen_id = substr(uniqid("SCRN_"), 0, 9);
+    $screen_id = uniqid("SCRN#");
     $screen_name = $_POST['screen_name'];
     $capacity = $_POST['capacity'];
     $screen_type = $_POST['screen_type'];

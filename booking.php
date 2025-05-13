@@ -27,7 +27,7 @@ if (isset($_GET['movie_id']) && !empty($_GET['movie_id'])) {
 
         // Fetch available showtimes for this movie
         $showtimeQuery = "
-            SELECT s.showtime_id, s.show_date, s.start_time, scr.screen_name, scr.screen_id 
+            SELECT s.showtime_id, s.show_date, s.start_time, s.price, scr.screen_name, scr.screen_id 
             FROM showtimes s
             JOIN screens scr ON s.screen_id = scr.screen_id
             WHERE s.movie_id = ? AND s.status = 'available' 
@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['screen_id'])) {
     $screen_id = mysqli_real_escape_string($conn, $_POST['screen_id']);
 
     $showtimeQuery = "
-        SELECT s.showtime_id, s.show_date, s.start_time, scr.screen_name 
+        SELECT s.showtime_id, s.show_date, s.start_time, s.price, scr.screen_name 
         FROM showtimes s
         JOIN screens scr ON s.screen_id = scr.screen_id
         WHERE s.screen_id = ? AND s.movie_id = ? AND s.status = 'available' 
@@ -91,6 +91,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['screen_id'])) {
 // Handle POST request for showtime selection
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['showtime_id'])) {
     $showtime_id = mysqli_real_escape_string($conn, $_POST['showtime_id']);
+
+    // Fetch selected showtime details including price
+    $selectedShowtimeQuery = "
+        SELECT s.showtime_id, s.show_date, s.start_time, s.price, scr.screen_name 
+        FROM showtimes s
+        JOIN screens scr ON s.screen_id = scr.screen_id
+        WHERE s.showtime_id = ?";
+    $stmt = mysqli_prepare($conn, $selectedShowtimeQuery);
+    mysqli_stmt_bind_param($stmt, "s", $showtime_id);
+    mysqli_stmt_execute($stmt);
+    $showtimeResult = mysqli_stmt_get_result($stmt);
+    $selectedShowtime = mysqli_fetch_assoc($showtimeResult);
 
     // Fetch available seats for the selected showtime
     $seatQuery = "
@@ -117,8 +129,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_booking'])) {
     if (empty($selected_seats)) {
         $error_message = "Please select at least one seat before continuing.";
     } else {
+        // Get the ticket price from showtime
+        $priceQuery = "SELECT price FROM showtimes WHERE showtime_id = ?";
+        $stmt = mysqli_prepare($conn, $priceQuery);
+        mysqli_stmt_bind_param($stmt, "s", $showtime_id);
+        mysqli_stmt_execute($stmt);
+        $priceResult = mysqli_stmt_get_result($stmt);
+        $priceRow = mysqli_fetch_assoc($priceResult);
+        $ticket_price_per_seat = $priceRow['price'];
+        
         $ticket_count = count($selected_seats);
-        $ticket_price_per_seat = 200;
         $booking_fee = 50;
         $total_price = ($ticket_price_per_seat * $ticket_count) + $booking_fee;
         $individual_price = $ticket_price_per_seat + ($booking_fee / $ticket_count);
@@ -126,36 +146,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_booking'])) {
         mysqli_begin_transaction($conn);
 
         try {
+            mysqli_begin_transaction($conn);
+
+            $booking_id = uniqid("BKNG#");
+            $escaped_booking_id = mysqli_real_escape_string($conn, $booking_id);
+            $escaped_user_id = mysqli_real_escape_string($conn, $userID);
+            $escaped_showtime_id = mysqli_real_escape_string($conn, $showtime_id);
+
+            $seat_count = count($selected_seats);
+            $total_price = $seat_count * $individual_price;
+
+            // Insert single booking with seat_count
+            $insertBookingQuery = "
+                INSERT INTO bookings (booking_id, user_id, showtime_id, seat_count, booking_date, total_price, status) 
+                VALUES ('$escaped_booking_id', '$escaped_user_id', '$escaped_showtime_id', $seat_count, NOW(), $total_price, 'pending')
+            ";
+
+            if (!mysqli_query($conn, $insertBookingQuery)) {
+                throw new Exception("Booking insert failed: " . mysqli_error($conn));
+            }
+
+            // Update each selected seat to 'occupied'
+            $updateSeatQuery = "UPDATE seats SET status = 'occupied' WHERE seat_id = ?";
+            $stmt = mysqli_prepare($conn, $updateSeatQuery);
+            if (!$stmt) {
+                throw new Exception("Prepare failed for seat update: " . mysqli_error($conn));
+            }
+
             foreach ($selected_seats as $seat_id) {
-                $booking_id = uniqid("BKNG");
-
-                $escaped_booking_id = mysqli_real_escape_string($conn, $booking_id);
-                $escaped_user_id = mysqli_real_escape_string($conn, $userID);
-                $escaped_showtime_id = mysqli_real_escape_string($conn, $showtime_id);
                 $escaped_seat_id = mysqli_real_escape_string($conn, $seat_id);
-
-                $insertBookingQuery = "
-                    INSERT INTO bookings (booking_id, user_id, showtime_id, seat_id, booking_date, total_price, status) 
-                    VALUES ('$escaped_booking_id', '$escaped_user_id', '$escaped_showtime_id', '$escaped_seat_id', NOW(), $individual_price, 'pending')
-                ";
-
-                if (!mysqli_query($conn, $insertBookingQuery)) {
-                    echo "Insert failed for seat $escaped_seat_id: " . mysqli_error($conn);
-                    throw new Exception("Booking insert failed for seat $escaped_seat_id");
-                }
-
-                // Update seat status to occupied
-                $updateSeatQuery = "UPDATE seats SET status = 'occupied' WHERE seat_id = ?";
-                $stmt = mysqli_prepare($conn, $updateSeatQuery);
-                if (!$stmt) {
-                    throw new Exception("Prepare failed for seat update: " . mysqli_error($conn));
-                }
-
                 mysqli_stmt_bind_param($stmt, "s", $escaped_seat_id);
                 if (!mysqli_stmt_execute($stmt)) {
-                    throw new Exception("Execute failed for seat update: " . mysqli_stmt_error($stmt));
+                    throw new Exception("Seat update failed for seat $escaped_seat_id: " . mysqli_stmt_error($stmt));
                 }
-
             }
 
             mysqli_commit($conn);
@@ -209,7 +232,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_booking'])) {
                         </select>
                     </form>
                 </div>
-
+                            
                 <!-- Showtime Selection -->
                 <div class="booking-section">
                     <?php if (isset($_POST['screen_id'])): ?>
@@ -224,7 +247,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_booking'])) {
                                         <?php echo (isset($_POST['showtime_id']) && $_POST['showtime_id'] == $showtime['showtime_id']) ? 'selected' : ''; ?>>
                                         <?php echo date('M d', strtotime($showtime['show_date'])) . ' - ' . 
                                                    date('h:i A', strtotime($showtime['start_time'])) . ' - ' . 
-                                                   htmlspecialchars($showtime['screen_name']); ?>
+                                                   htmlspecialchars($showtime['screen_name']) . ' - ₱' .
+                                                   htmlspecialchars($showtime['price']); ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -244,6 +268,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_booking'])) {
                         <form id="bookingForm" method="POST" action="booking.php?movie_id=<?php echo urlencode($movie_id); ?>">
                             <input type="hidden" name="selected_showtime_id" value="<?php echo htmlspecialchars($_POST['showtime_id']); ?>">
                             <input type="hidden" name="screen_id" value="<?php echo htmlspecialchars($_POST['screen_id']); ?>">
+                            <input type="hidden" id="ticket-price" value="<?php echo htmlspecialchars($selectedShowtime['price']); ?>">
                             
                             <h2>Select Seats</h2>
                             <label for="ticket-count">Number of Tickets:</label>
@@ -284,9 +309,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_booking'])) {
                     </div>
 
                     <div class="booking-details">
-                        <p><strong>Date:</strong> <span id="selectedDate"><?php echo isset($_POST['showtime_id']) ? date('M d, Y', strtotime($showtimes[array_search($_POST['showtime_id'], array_column($showtimes, 'showtime_id'))]['show_date'])) : 'N/A'; ?></span></p>
-                        <p><strong>Time:</strong> <span id="selectedTime"><?php echo isset($_POST['showtime_id']) ? date('h:i A', strtotime($showtimes[array_search($_POST['showtime_id'], array_column($showtimes, 'showtime_id'))]['start_time'])) : 'N/A'; ?></span></p>
-                        <p><strong>Screen:</strong> <span id="selectedScreen"><?php echo isset($_POST['screen_id']) ? htmlspecialchars($screens[array_search($_POST['screen_id'], array_column($screens, 'screen_id'))]['screen_name']) : 'N/A'; ?></span></p>
+                        <p><strong>Date:</strong> <span id="selectedDate"><?php echo isset($_POST['showtime_id']) ? date('M d, Y', strtotime($selectedShowtime['show_date'])) : 'N/A'; ?></span></p>
+                        <p><strong>Time:</strong> <span id="selectedTime"><?php echo isset($_POST['showtime_id']) ? date('h:i A', strtotime($selectedShowtime['start_time'])) : 'N/A'; ?></span></p>
+                        <p><strong>Screen:</strong> <span id="selectedScreen"><?php echo isset($_POST['showtime_id']) ? htmlspecialchars($selectedShowtime['screen_name']) : 'N/A'; ?></span></p>
+                        <?php if (isset($_POST['showtime_id'])): ?>
+                        <p><strong>Ticket Price:</strong> ₱<?php echo htmlspecialchars($selectedShowtime['price']); ?> per ticket</p>
+                        <?php endif; ?>
                     </div>
 
                     <div class="divider"></div>
@@ -325,101 +353,89 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_booking'])) {
     </div>
     <?php include("footer.php"); ?>
     <script>
-      document.addEventListener('DOMContentLoaded', function () {
-    const ticketCountInput = document.getElementById('ticket-count');
-    const seatCheckboxes = document.querySelectorAll('.seat-checkbox');
-    const selectedSeatsText = document.getElementById('selectedSeatsText');
-    const ticketCountDisplay = document.getElementById('ticketCountDisplay');
-    const ticketPrice = document.getElementById('ticketPrice');
-    const totalPrice = document.getElementById('totalPrice');
-    const continueButton = document.getElementById('continueButton');
-    const bookingFee = 50; // Fixed booking fee
-    const ticketPricePerSeat = 200; // Example ticket price per seat
+        document.addEventListener('DOMContentLoaded', function () {
+        const ticketCountInput = document.getElementById('ticket-count');
+        const seatCheckboxes = document.querySelectorAll('.seat-checkbox');
+        const selectedSeatsText = document.getElementById('selectedSeatsText');
+        const ticketCountDisplay = document.getElementById('ticketCountDisplay');
+        const ticketPrice = document.getElementById('ticketPrice');
+        const totalPrice = document.getElementById('totalPrice');
+        const continueButton = document.getElementById('continueButton');
+        const bookingFee = 50; // Fixed booking fee
+        const ticketPricePerSeat = parseFloat(document.getElementById('ticket-price')?.value || 0);
 
-    // Update selected seats in the booking summary
-    function updateSelectedSeats() {
-        const selectedSeats = Array.from(seatCheckboxes)
-            .filter(checkbox => checkbox.checked)
-            .map(checkbox => checkbox.nextElementSibling.textContent.trim());
-        selectedSeatsText.textContent = selectedSeats.length > 0 ? selectedSeats.join(', ') : 'No seat selected';
+        // Update selected seats in the booking summary
+        function updateSelectedSeats() {
+            const selectedSeats = Array.from(seatCheckboxes)
+                .filter(checkbox => checkbox.checked)
+                .map(checkbox => checkbox.nextElementSibling.textContent.trim());
+            selectedSeatsText.textContent = selectedSeats.length > 0 ? selectedSeats.join(', ') : 'No seat selected';
 
-        // Update ticket count and price
-        const selectedCount = selectedSeats.length;
-        ticketCountDisplay.textContent = selectedCount;
-        ticketPrice.textContent = `₱${(selectedCount * ticketPricePerSeat).toFixed(2)}`;
-        totalPrice.textContent = `₱${(selectedCount * ticketPricePerSeat + bookingFee).toFixed(2)}`;
-        
-        // Enable or disable the continue button based on seat selection
-        if (continueButton) {
-            continueButton.disabled = selectedCount === 0;
+            // Update ticket count and price
+            const selectedCount = selectedSeats.length;
+            ticketCountDisplay.textContent = selectedCount;
+            ticketPrice.textContent = `₱${(selectedCount * ticketPricePerSeat).toFixed(2)}`;
+            totalPrice.textContent = `₱${(selectedCount * ticketPricePerSeat + bookingFee).toFixed(2)}`;
+            
+            // Enable or disable the continue button based on seat selection
+            if (continueButton) {
+                continueButton.disabled = selectedCount === 0;
+            }
         }
-    }
 
-    // Enforce ticket count limit
-    function enforceTicketLimit() {
-        const ticketCount = parseInt(ticketCountInput.value, 10) || 1;
-        const selectedCount = Array.from(seatCheckboxes).filter(checkbox => checkbox.checked).length;
+        // Enforce ticket count limit
+        function enforceTicketLimit() {
+            const ticketCount = parseInt(ticketCountInput.value, 10) || 1;
+            const selectedCheckboxes = Array.from(seatCheckboxes).filter(cb => cb.checked);
+            const selectedCount = selectedCheckboxes.length;
 
-        // Reset all non-occupied seats first
+            // Enable all seats first (except permanently occupied ones)
+            seatCheckboxes.forEach(checkbox => {
+                // Don't change status of seats that are permanently disabled (occupied)
+                if (!checkbox.hasAttribute('data-occupied')) {
+                    // Always allow selected seats to be deselected
+                    checkbox.disabled = false;
+                }
+            });
+
+            // Then disable only unselected seats if we've reached the ticket limit
+            if (selectedCount >= ticketCount) {
+                seatCheckboxes.forEach(checkbox => {
+                    // Only disable unselected seats, leave selected seats enabled so they can be deselected
+                    if (!checkbox.checked && !checkbox.hasAttribute('data-occupied')) {
+                        checkbox.disabled = true;
+                    }
+                });
+            }
+
+            updateSelectedSeats();
+        }
+
+        // Mark occupied seats (do this once at initialization)
         seatCheckboxes.forEach(checkbox => {
-            // Skip seats that are permanently disabled (occupied)
-            if (!checkbox.hasAttribute('data-occupied')) {
-                checkbox.disabled = false;
+            if (checkbox.disabled) {
+                // Add a data attribute to permanently disabled (occupied) seats
+                checkbox.setAttribute('data-occupied', 'true');
             }
         });
 
-        // If we've reached the ticket limit, disable unselected seats
-        if (selectedCount >= ticketCount) {
-            seatCheckboxes.forEach(checkbox => {
-                if (!checkbox.checked && !checkbox.hasAttribute('data-occupied')) {
-                    checkbox.disabled = true;
-                }
+        // Add listener to all checkboxes and ticket count input
+        seatCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                enforceTicketLimit();
+                updateSelectedSeats();
             });
-        }
-
-        updateSelectedSeats();
-    }
-
-    // Mark occupied seats (do this once at initialization)
-    seatCheckboxes.forEach(checkbox => {
-        if (checkbox.disabled) {
-            // Add a data attribute to permanently disabled (occupied) seats
-            checkbox.setAttribute('data-occupied', 'true');
-        }
-    });
-
-    // Add listener to all checkboxes and ticket count input
-    seatCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', () => {
+        });
+        
+        ticketCountInput.addEventListener('input', () => {
             enforceTicketLimit();
             updateSelectedSeats();
         });
-    });
-    ticketCountInput.addEventListener('input', () => {
+
+        // Initialize on page load
         enforceTicketLimit();
         updateSelectedSeats();
     });
-
-    // Revised enforceTicketLimit
-    function enforceTicketLimit() {
-        const ticketCount = parseInt(ticketCountInput.value, 10) || 1;
-        const selectedCheckboxes = Array.from(seatCheckboxes).filter(cb => cb.checked);
-        const selectedCount = selectedCheckboxes.length;
-
-        seatCheckboxes.forEach(cb => {
-            const isOccupied = cb.disabled && !cb.checked; // don't un-disable occupied ones
-            if (!cb.checked && !isOccupied) {
-                cb.disabled = selectedCount >= ticketCount;
-            } else if (!isOccupied) {
-                cb.disabled = false;
-            }
-        });
-
-        if (continueButton) {
-            continueButton.disabled = selectedCount === 0;
-        }
-    }
-});
     </script>
 </body>
 </html>

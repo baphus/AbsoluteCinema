@@ -1,4 +1,4 @@
-<?php 
+<?php
 session_start();
 include("config.php");
 
@@ -11,6 +11,27 @@ if (!isset($_SESSION['user_id'])) {
 
 $userID = $_SESSION['user_id'];
 
+// Check if form was submitted (payment button clicked)
+if (isset($_POST['submit_payment']) && isset($_POST['booking_id'])) {
+    $booking_id = $_POST['booking_id'];
+    
+    // Update booking status to 'confirmed' or 'paid'
+    $updateQuery = "UPDATE bookings SET status = 'confirmed' WHERE booking_id = ? AND user_id = ?";
+    $stmt = mysqli_prepare($conn, $updateQuery);
+    mysqli_stmt_bind_param($stmt, "ss", $booking_id, $userID);
+    $result = mysqli_stmt_execute($stmt);
+    
+    if ($result) {
+        // Redirect to confirmation page with booking id
+        header("Location: confirmation.php?booking_id=" . urlencode($booking_id));
+        exit;
+    } else {
+        // Error handling
+        $error_message = "Failed to process payment. Please try again.";
+    }
+}
+
+// If no booking_id in URL, redirect to index
 if (!isset($_GET['booking_id']) || empty($_GET['booking_id'])) {
     error_log("No booking ID in URL. Redirecting to index.");
     header("Location: index.php");
@@ -62,42 +83,46 @@ $row = mysqli_fetch_assoc($showDateResult);
 $target_show_date = $row['show_date'];
 
 // Step 2: Fetch all bookings for the user on that show_date
+// FIXED QUERY: Based on the actual table structure without seat-booking direct relationship
 $bookingQuery = "
-    SELECT b.*, s1.show_date, s1.start_time, m.title, m.poster, m.duration, m.rating, scr.screen_name, s2.seat_number, s2.row_label
-    FROM bookings b
-    JOIN showtimes s1 ON b.showtime_id = s1.showtime_id
-    JOIN movies m ON s1.movie_id = m.movie_id
-    JOIN screens scr ON s1.screen_id = scr.screen_id
-    JOIN seats s2 ON b.seat_id = s2.seat_id
-    WHERE b.user_id = ? AND s1.show_date = ?
-    ORDER BY s1.start_time, scr.screen_name
+    SELECT b.*, s1.show_date, s1.start_time, m.title, m.poster, m.duration, m.rating, scr.screen_name
+        FROM bookings b
+        JOIN showtimes s1 ON b.showtime_id = s1.showtime_id
+        JOIN movies m ON s1.movie_id = m.movie_id
+        JOIN screens scr ON s1.screen_id = scr.screen_id
+        WHERE b.user_id = ? AND s1.show_date = ?
+        ORDER BY s1.start_time, scr.screen_name
 ";
 $stmt = mysqli_prepare($conn, $bookingQuery);
 mysqli_stmt_bind_param($stmt, "ss", $userID, $target_show_date);
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 
-// Collect seat info and use the first row for display
-$seats = [];
+// Collect booking info and use the first row for display
 $displayData = null;
 
 if ($result && mysqli_num_rows($result) > 0) {
+    // Just use the first booking for display
+    $displayData = mysqli_fetch_assoc($result);
+    
+    // Reset the result pointer to process all bookings if needed
+    mysqli_data_seek($result, 0);
+    
+    // For seat display, we'll just show seat count since we don't have individual seat info
+    $total_seats = 0;
     while ($booking = mysqli_fetch_assoc($result)) {
-        $seats[] = $booking['row_label'] . $booking['seat_number'];
-
-        // Use the first booking row to extract movie/showtime data
-        if ($displayData === null) {
-            $displayData = $booking;
-        }
+        $total_seats += $booking['seat_count'];
     }
-
-    $seat_display = implode(', ', $seats);
+    
+    $seat_display = $total_seats . " seat(s)";
 } else {
     error_log("No bookings found for User ID: $userID on show date: $target_show_date");
     header("Location: index.php");
     exit;
 }
 
+// Generate a transaction ID for display purposes
+$transaction_id = "TXN" . rand(100000, 999999);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -226,7 +251,14 @@ if ($result && mysqli_num_rows($result) > 0) {
         <h1 class="payment-title">Payment</h1>
         <p class="payment-subtitle">Complete your booking by making payment</p>
         
+        <?php if(isset($error_message)): ?>
+        <div class="error-message">
+            <?php echo htmlspecialchars($error_message); ?>
+        </div>
+        <?php endif; ?>
+        
         <form method="POST" action="payment.php" id="paymentForm">
+            <input type="hidden" name="booking_id" value="<?php echo htmlspecialchars($booking_id); ?>">
             <div class="payment-grid">
                 <div class="payment-notice">
                     <h2>Simplified Payment Process</h2>
@@ -238,28 +270,29 @@ if ($result && mysqli_num_rows($result) > 0) {
                     <h2>Order Summary</h2>
                     <div class="movie-ticket">
                         <div class="movie-thumbnail">
-                            <img src="<?php echo htmlspecialchars($booking['poster']); ?>" alt="<?php echo htmlspecialchars($booking['title']); ?> movie poster">
+                            <img src="<?php echo htmlspecialchars($displayData['poster']); ?>" alt="<?php echo htmlspecialchars($displayData['title']); ?> movie poster">
                         </div>
                         <div class="movie-details">
-                            <h3><?php echo htmlspecialchars($booking['title']); ?></h3>
-                            <p><?php echo htmlspecialchars($booking['rating']); ?> | <?php echo htmlspecialchars($booking['duration']); ?> mins</p>
-                            <p><?php echo date('F d', strtotime($booking['show_date'])); ?>, <?php echo date('h:i A', strtotime($booking['start_time'])); ?></p>
-                            <p>Screen: <?php echo htmlspecialchars($booking['screen_name']); ?></p>
+                            <h3><?php echo htmlspecialchars($displayData['title']); ?></h3>
+                            <p><?php echo htmlspecialchars($displayData['rating']); ?> | <?php echo htmlspecialchars($displayData['duration']); ?> mins</p>
+                            <p><?php echo date('F d', strtotime($displayData['show_date'])); ?>, <?php echo date('h:i A', strtotime($displayData['start_time'])); ?></p>
+                            <p>Screen: <?php echo htmlspecialchars($displayData['screen_name']); ?></p>
                             <p>Seats: <?php echo htmlspecialchars($seat_display); ?></p> <!-- Multiple seats -->
-                        </div>
-                    
-                    <div class="price-breakdown">
-                        <div class="price-row">
-                            <span>Ticket</span>
-                            <span>₱100.00</span>
-                        </div>
-                        <div class="price-row total">
-                            <span>Total</span>
-                            <span>₱100.00</span>
                         </div>
                     </div>
                     
-                    <button type="submit" name="submit_payment" class="pay-button">Pay ₱100.00</button>
+                    <div class="price-breakdown">
+                        <div class="price-row">
+                            <span>Tickets (<?php echo htmlspecialchars($displayData['seat_count']); ?>)</span>
+                            <span>₱<?php echo number_format($displayData['total_price'], 2); ?></span>
+                        </div>
+                        <div class="price-row total">
+                            <span>Total</span>
+                            <span>₱<?php echo number_format($displayData['total_price'], 2); ?></span>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" name="submit_payment" class="pay-button">Pay ₱<?php echo number_format($displayData['total_price'], 2); ?></button>
                 </div>
             </div>
         </form>
@@ -267,5 +300,4 @@ if ($result && mysqli_num_rows($result) > 0) {
     
     <?php include("footer.php");?>
 </body>
-</html>
 </html>

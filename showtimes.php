@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_name']) || $_SESSION['role'] !== 'admin') {
 
 // Process form submission for adding new showtimes
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_showtime'])) {
-    $showtime_id = uniqid("SHWTME_");
+    $showtime_id = uniqid("SHWTME#");
     $movie_id = $_POST['movie_id'];
     $screen_id = $_POST['screen_id'];
     $show_date = $_POST['show_date'];

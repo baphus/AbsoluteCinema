@@ -18,16 +18,17 @@ mysqli_stmt_bind_result($userStmt, $first_name, $last_name, $email, $phone, $cre
 mysqli_stmt_fetch($userStmt);
 mysqli_stmt_close($userStmt);
 
-// Fetch user bookings
+// Fetch user bookings with movie poster
 $bookingsQuery = "
     SELECT 
-        b.booking_id, 
+        b.booking_id,
+        b.seat_count, 
         m.title, 
         m.genre, 
         m.duration, 
-        m.rating, 
+        m.rating,
+        m.poster, 
         s.screen_name, 
-        s1.seat_id, 
         b.booking_date, 
         st.show_date, 
         st.start_time, 
@@ -37,7 +38,6 @@ $bookingsQuery = "
     JOIN showtimes st ON b.showtime_id = st.showtime_id
     JOIN movies m ON st.movie_id = m.movie_id
     JOIN screens s ON st.screen_id = s.screen_id
-	JOIN seats s1 ON b.seat_id = s1.seat_id
     WHERE user_id = ?
     ORDER BY b.booking_date DESC";
 
@@ -82,7 +82,11 @@ $bookingsResult = mysqli_stmt_get_result($bookingsStmt);
                     <?php while ($booking = mysqli_fetch_assoc($bookingsResult)): ?>
                         <div class="booking-card">
                             <div class="booking-image">
-                                <img src="/api/placeholder/150/150" alt="Movie poster">
+                                <?php if (!empty($booking['poster'])): ?>
+                                    <img src="<?php echo htmlspecialchars($booking['poster']); ?>" alt="<?php echo htmlspecialchars($booking['title']); ?> poster">
+                                <?php else: ?>
+                                    <img src="/images/default-movie-poster.jpg" alt="Default movie poster">
+                                <?php endif; ?>
                             </div>
                             <div class="booking-details">
                                 <div class="booking-number">Booking #<?php echo htmlspecialchars($booking['booking_id']); ?></div>
@@ -98,7 +102,7 @@ $bookingsResult = mysqli_stmt_get_result($bookingsStmt);
                                     <div class="booking-info-column">
                                         <p class="booking-info-label">Screen & Seat</p>
                                         <p class="booking-info-value"><?php echo htmlspecialchars($booking['screen_name']); ?></p>
-                                        <p class="booking-info-value">Seat: <?php echo htmlspecialchars($booking['seat_id']); ?></p>
+                                        <p class="booking-info-value">Seat Count: <?php echo htmlspecialchars($booking['seat_count']); ?></p>
                                     </div>
                                     <div class="booking-info-column">
                                         <p class="booking-info-label">Total Price</p>

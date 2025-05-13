@@ -13,14 +13,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_booking'])) {
     $user_id = $_POST['user_id'];
     $showtime_id = $_POST['showtime_id'];
     $booking_date = $_POST['booking_date'];
-    $seat_id = $_POST['seat_id'];
+    $seat_count = $_POST['seat_count'];
     $total_price = $_POST['total_price'];
     $status = $_POST['status'];
 
-    $insertQuery = "INSERT INTO bookings (user_id, showtime_id, booking_date, seat_id, total_price, status) 
+    $insertQuery = "INSERT INTO bookings (user_id, showtime_id, booking_date, seat_count, total_price, status) 
                     VALUES (?, ?, ?, ?, ?, ?)";
+    mysqli_stmt_bind_param($stmt, "iisdss", $user_id, $showtime_id, $booking_date, $seat_count, $total_price, $status);
+
     $stmt = mysqli_prepare($conn, $insertQuery);
-    mysqli_stmt_bind_param($stmt, "isssds", $user_id, $showtime_id, $booking_date, $seat_id, $total_price, $status);
 
     if (mysqli_stmt_execute($stmt)) {
         $_SESSION['success_message'] = "Booking added successfully!";
@@ -132,7 +133,7 @@ if (!$result) {
                                 <th>ID</th>
                                 <th>User ID</th>
                                 <th>Showtime ID</th>
-                                <th>Seat ID</th>
+                                <th>Seat Count</th>
                                 <th>Booking Date</th>
                                 <th>Total Price</th>
                                 <th>Status</th>
@@ -146,7 +147,7 @@ if (!$result) {
                                         <td><?php echo htmlspecialchars($booking['booking_id']); ?></td>
                                         <td><?php echo htmlspecialchars($booking['user_id']); ?></td>
                                         <td><?php echo htmlspecialchars($booking['showtime_id']); ?></td>
-                                        <td><?php echo htmlspecialchars($booking['seat_id']); ?></td>
+                                        <td><?php echo htmlspecialchars($booking['seat_count']); ?></td>
                                         <td><?php echo htmlspecialchars($booking['booking_date']); ?></td>
                                         <td>₱<?php echo htmlspecialchars(number_format($booking['total_price'], 2)); ?></td>
                                         <td><?php echo htmlspecialchars($booking['status']); ?></td>
