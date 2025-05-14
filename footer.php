@@ -46,7 +46,7 @@ footer {
       <div class="footer-column">
         <h3>Quick Links</h3>
         <ul>
-          <li><a href="about-us.html">About us</a></li>
+          <li><a href="/about-us.php">About us</a></li>
           <li><a href="#">Contact</a></li>
           <li><a href="#">FAQ</a></li>
         </ul>
