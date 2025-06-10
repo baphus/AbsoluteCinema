@@ -2,7 +2,7 @@
 
 **AbsoluteCinema** is a web-based movie ticket booking system developed as a final project for our CC225 - Information Management course at Cebu Technological University.
 
-![AbsoluteCinema Banner](images/banner.png)
+![AbsoluteCinema Banner](images/banner.jpg)
 
 ## 📌 Project Overview
 
