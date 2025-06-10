@@ -1,7 +1,7 @@
 <?php
 $host = 'localhost'; // Database host
 $dbname = 'absolute_cinema_db'; // Database name
-$username = 'root'; // Database username
+$username = 'root'; // Database usernameMU
 $password = ''; // Database password (leave empty for default XAMPP setup)
 
 // Create a connection

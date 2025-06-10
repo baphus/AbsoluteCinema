@@ -1,106 +1,95 @@
-# 🎬 Movie Ticket Booking System
+# 🎬 AbsoluteCinema
 
-Welcome to our **Movie Ticket Booking System**! 🍿🎟️
+**AbsoluteCinema** is a web-based movie ticket booking system developed as a final project for our CC225 - Information Management course at Cebu Technological University.
 
-This project is a web-based platform that simplifies movie ticket booking for customers and cinema management for staff. It aims to provide a smooth, convenient, and efficient movie-watching experience. 🚀
+![AbsoluteCinema Banner](images/banner.png)
 
----
+## 📌 Project Overview
 
-## 📜 Project Description
+AbsoluteCinema was built to solve common issues in manual ticketing systems such as long queues, double bookings, and scheduling conflicts. The system supports both customer and admin roles:
 
-The **Movie Ticket Booking System** allows:
-- 🎥 Customers to browse movies, view showtimes, select seats, and book tickets.
-- 🛠️ Admins to manage movie listings, showtimes, seats, and view bookings.
-
-Say goodbye to long lines and hello to seamless online reservations! 🙌
+- **Customers** can register, browse movies, view showtimes, check seat availability, book tickets, and view their booking history.
+- **Admins** can manage movie records, screen configurations, showtimes, bookings, and user data through an intuitive dashboard.
 
 ---
 
-## 👩‍💻👨‍💻 Group Members
-- Berame, Kristh Alner
-- Cabiso, John Melbur Jr.
-- Condes, Franz Dominic
-- Luab, Renz Kayne
-- Sanchez, Sherilyn
-- Sarsonas, Josephus Kim
-- Taguisa, Shen Kylle
+## 👨‍💻 My Learning Journey
+
+I started this project with very limited knowledge about PHP and databases. I searched *"PHP full course"* on YouTube and began learning the basics. With time and experimentation, especially on form handling and login systems, I was able to implement everything from the login page to a full admin dashboard.
+
+Despite the project requiring only a basic login-logout flow, I went further and created full admin control features, UI translations from team designs, and functional user flows. This project made me realize I enjoy building full systems and interfaces.
 
 ---
 
-## 🎯 Target Users
-- **Regular Users (Customers)** 👥
-  - View available movies
-  - Book tickets and select seats
-  - View booking history
-- **Admins (Cinema Staff)** 🛠️
-  - Manage movie records
-  - Manage showtimes and seating
-  - Manage and view bookings
+## 🔑 Features
+
+### For Customers:
+- 📝 Register/Login
+- 🎞️ View movies & details
+- 🕒 View showtimes & seat availability
+- 🎟️ Book seats and view history
+
+### For Admins:
+- 🎬 Manage movies, screens, showtimes, and users
+- 📊 View and manage all bookings
+- 🖥️ Admin dashboard interface
 
 ---
 
-## ⚙️ Functional Requirements
+## 🖼️ Screenshots
 
-**For Customers:**
-- 🔐 Register and log in
-- 🎞️ View movies and showtimes
-- 🎫 Select seats and book tickets
-- 📚 View booking history
+### 🎥 Home Page  
+![Homepage](images/homepage.jpg)
 
-**For Admins:**
-- ➕ Add, update, or delete movies
-- 🕑 Set and manage showtimes and seating
-- 📋 View and manage all bookings
+### 🔐 Login Page  
+![Login Page](images/login.jpg)
 
----
+### 🎫 Movie List / All Movies Page  
+![All Movies](images/all-movies.jpg)
 
-## 🛠️ System Environment
-- 🌐 Web-based platform (desktop & mobile-friendly)
-- 🗄️ Relational Database for user, movie, showtime, seat, and booking data
+### 🧑‍💼 Admin Dashboard  
+![Admin Dashboard](images/admin-dashboard.jpg)
+
+### 🧾 Admin – Bookings Page  
+![Bookings](images/admin-bookings.jpg)
 
 ---
 
-## 🗃️ Database Tables
-- **Users** 👤
-- **Movies** 🎥
-- **Screens** 🖥️
-- **Showtimes** 🕒
-- **Seats** 🎟️
-- **Bookings** 📝
-- **BookingDetails** 📄
-- **Payments** 💳
+## 🛠 Tech Stack
+
+- **Frontend:** HTML, CSS, JavaScript  
+- **Backend:** PHP  
+- **Database:** MySQL  
 
 ---
 
-## 📚 Example Scenarios
+## 📚 What I Learned
 
-**🎟️ Booking a Ticket:**
-1. User registers and logs in
-2. User browses movies and selects a showtime
-3. User selects seats and books tickets
-4. System confirms and stores the booking
-
-**🛠️ Managing Movies (Admin):**
-1. Admin logs in
-2. Admin adds new movies and showtimes
-3. Admin monitors and manages bookings
+- PHP form handling, sessions, and database connections
+- SQL CRUD operations and database schema design
+- Admin-user role management
+- Responsive design and UX
+- How to bring ideas to life, even from scratch
 
 ---
 
-## 🚀 Future Enhancements
-- Email confirmation for bookings 📧
-- Discount coupons and promotions 🎟️
-- Seat maps with real-time availability 🗺️
-- Payment gateway integration 💳
+## 👥 Team Members
+
+- Kristh Alner Berame  
+- John Melbur Jr. Cabiso  
+- Franz Dominic Condes  
+- Renz Kayne Luab  
+- Sherilyn Sanchez  
+- **Josephus Kim Sarsonas** *(me)*  
+- Shen Kylle Taguisa  
 
 ---
 
-## 📢 Note
+## 📂 Repository
 
-This project was developed as a requirement for our **CC225** course. It is the first version (first draft), and will be further improved! 🚀
-
----
-
-> _“Movies touch our hearts and awaken our vision.”_ — Martin Scorsese 🎬
+👉 [https://github.com/baphus/AbsoluteCinema](https://github.com/baphus/AbsoluteCinema)
 
 ---
+
+> 💬 *"It’s not perfect, but it’s a solid start."*  
+> I’m excited to build more and learn along the way.
